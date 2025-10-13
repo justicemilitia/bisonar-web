@@ -1,0 +1,272 @@
+{
+  "en": {
+    "header": {
+      "nav": {
+        "about": "About Us",
+        "services": "Services",
+        "success": "Success Stories",
+        "industries": "Industries",
+        "blog": "Blog",
+        "contact": "Contact"
+      },
+      "cta": "Get a Quote"
+    },
+    "hero": {
+      "headline": "Empower Your Business with AI Automation.",
+      "subheadline": "Bisonar builds intelligent workflows with AI Agents to simplify your operations.",
+      "cta": "Get Started"
+    },
+    "about": {
+      "title": "About Bisonar",
+      "mission": "Our Mission",
+      "missionText": "To transform businesses by automating repetitive tasks and creating intelligent, data-driven workflows. We bridge the gap between human processes and machine efficiency.",
+      "techTitle": "Our Technology Stack",
+      "tech": ["n8n", "LangChain", "OpenAI", "Zapier", "Custom ML Models"],
+      "teamTitle": "Meet Our Team",
+      "team": [
+        { "name": "Alex Johnson", "title": "CEO & Founder" },
+        { "name": "Samantha Lee", "title": "Lead Automation Engineer" },
+        { "name": "David Chen", "title": "AI Specialist" },
+        { "name": "Maria Garcia", "title": "Head of Solutions" }
+      ]
+    },
+    "services": {
+      "title": "Our Services",
+      "subtitle": "Driving efficiency through intelligent automation.",
+      "items": [
+        {
+          "title": "AI Workflow Automation",
+          "description": "Build sophisticated, AI-driven business automations that handle complex tasks and decision-making."
+        },
+        {
+          "title": "n8n Integration Solutions",
+          "description": "Seamlessly connect data and automate processes across hundreds of applications and internal systems."
+        },
+        {
+          "title": "Custom AI Agents",
+          "description": "Develop intelligent chatbots, virtual assistants, and autonomous data handlers tailored to your needs."
+        },
+        {
+          "title": "Data Intelligence & Reporting",
+          "description": "Automate data collection and turn raw business data into actionable, real-time insights and reports."
+        }
+      ],
+      "cta": "Learn More"
+    },
+    "success": {
+      "title": "Success Stories",
+      "subtitle": "See the real-world impact of our automation solutions.",
+      "stories": [
+        {
+          "industry": "E-commerce",
+          "title": "Automated Order Management",
+          "impact": "Saved 200+ hours/month"
+        },
+        {
+          "industry": "Finance",
+          "title": "Smart Data Reconciliation",
+          "impact": "99.8% accuracy in reporting"
+        },
+        {
+          "industry": "Healthcare",
+          "title": "Automated Patient Communication",
+          "impact": "40% reduction in no-shows"
+        }
+      ],
+      "cta": "Watch Case Study"
+    },
+    "showcase": {
+      "title": "See How Automation Works",
+      "subtitle": "Interactive demos of our intelligent workflows in action.",
+      "demos": [
+        { "title": "AI Email Reply Bot" },
+        { "title": "Automated Report Generator" },
+        { "title": "CRM Data Sync" }
+      ],
+      "cta": "Play Demo"
+    },
+    "industries": {
+      "title": "Industries We Serve",
+      "subtitle": "Tailored automation solutions for your specific sector.",
+      "items": ["E-commerce", "Finance", "Healthtech", "SaaS", "Marketing", "Logistics"]
+    },
+    "blog": {
+      "title": "Insights & Articles",
+      "subtitle": "The latest on AI, automation, and workflow intelligence.",
+      "posts": [
+        {
+          "title": "The Future of Business is Autonomous",
+          "author": "Alex Johnson",
+          "readTime": "5 min read"
+        },
+        {
+          "title": "A Deep Dive into n8n for Enterprise",
+          "author": "Samantha Lee",
+          "readTime": "8 min read"
+        },
+        {
+          "title": "Building Your First AI Agent with LangChain",
+          "author": "David Chen",
+          "readTime": "12 min read"
+        }
+      ],
+      "cta": "Read More"
+    },
+    "contact": {
+      "title": "Let's Automate Together",
+      "subtitle": "Tell us about your business, and we'll show you how AI can help.",
+      "form": {
+        "name": "Name",
+        "company": "Company",
+        "email": "Email",
+        "message": "Message",
+        "submit": "Send Message",
+        "placeholder": {
+          "name": "Your full name",
+          "company": "Your company name",
+          "email": "you@company.com",
+          "message": "How can we help you automate?"
+        }
+      }
+    },
+    "footer": {
+      "slogan": "From Repetition to Intelligence.",
+      "copyright": "© 2025 Bisonar. All rights reserved."
+    }
+  },
+  "tr": {
+    "header": {
+      "nav": {
+        "about": "Hakkımızda",
+        "services": "Hizmetler",
+        "success": "Başarı Hikayeleri",
+        "industries": "Sektörler",
+        "blog": "Blog",
+        "contact": "İletişim"
+      },
+      "cta": "Teklif Al"
+    },
+    "hero": {
+      "headline": "Yapay Zeka Otomasyonu ile İşinizi Güçlendirin.",
+      "subheadline": "Bisonar, operasyonlarınızı basitleştirmek için Yapay Zeka Agentları ile akıllı iş akışları oluşturur.",
+      "cta": "Başlayın"
+    },
+    "about": {
+      "title": "Bisonar Hakkında",
+      "mission": "Misyonumuz",
+      "missionText": "Tekrarlayan görevleri otomatikleştirerek ve akıllı, veri odaklı iş akışları yaratarak işletmeleri dönüştürmek. İnsan süreçleri ve makine verimliliği arasındaki boşluğu dolduruyoruz.",
+      "techTitle": "Teknoloji Yığınımız",
+      "tech": ["n8n", "LangChain", "OpenAI", "Zapier", "Özel ML Modelleri"],
+      "teamTitle": "Ekibimizle Tanışın",
+      "team": [
+        { "name": "Alex Johnson", "title": "CEO & Kurucu" },
+        { "name": "Samantha Lee", "title": "Lider Otomasyon Mühendisi" },
+        { "name": "David Chen", "title": "Yapay Zeka Uzmanı" },
+        { "name": "Maria Garcia", "title": "Çözüm Lideri" }
+      ]
+    },
+    "services": {
+      "title": "Hizmetlerimiz",
+      "subtitle": "Akıllı otomasyon ile verimliliği artırıyoruz.",
+      "items": [
+        {
+          "title": "Yapay Zeka İş Akışı Otomasyonu",
+          "description": "Karmaşık görevleri ve karar verme süreçlerini yöneten gelişmiş, yapay zeka odaklı iş otomasyonları oluşturun."
+        },
+        {
+          "title": "n8n Entegrasyon Çözümleri",
+          "description": "Yüzlerce uygulama ve dahili sistem arasında verileri sorunsuz bir şekilde bağlayın ve süreçleri otomatikleştirin."
+        },
+        {
+          "title": "Özel Yapay Zeka Agentları",
+          "description": "İhtiyaçlarınıza özel akıllı sohbet botları, sanal asistanlar ve otonom veri işleyiciler geliştirin."
+        },
+        {
+          "title": "Veri Zekası & Raporlama",
+          "description": "Veri toplamayı otomatikleştirin ve ham iş verilerini eyleme geçirilebilir, gerçek zamanlı içgörülere ve raporlara dönüştürün."
+        }
+      ],
+      "cta": "Daha Fazla Bilgi"
+    },
+    "success": {
+      "title": "Başarı Hikayeleri",
+      "subtitle": "Otomasyon çözümlerimizin gerçek dünyadaki etkisini görün.",
+      "stories": [
+        {
+          "industry": "E-ticaret",
+          "title": "Otomatik Sipariş Yönetimi",
+          "impact": "Ayda 200+ saat tasarruf"
+        },
+        {
+          "industry": "Finans",
+          "title": "Akıllı Veri Mutabakatı",
+          "impact": "Raporlamada %99.8 doğruluk"
+        },
+        {
+          "industry": "Sağlık",
+          "title": "Otomatik Hasta İletişimi",
+          "impact": "Randevu kaçırmada %40 azalma"
+        }
+      ],
+      "cta": "Vaka Analizini İzle"
+    },
+    "showcase": {
+      "title": "Otomasyon Nasıl Çalışır?",
+      "subtitle": "Akıllı iş akışlarımızın etkileşimli demoları.",
+      "demos": [
+        { "title": "Yapay Zeka E-posta Yanıtlama Botu" },
+        { "title": "Otomatik Rapor Oluşturucu" },
+        { "title": "CRM Veri Senkronizasyonu" }
+      ],
+      "cta": "Demoyu Oynat"
+    },
+    "industries": {
+      "title": "Hizmet Verdiğimiz Sektörler",
+      "subtitle": "Sektörünüze özel otomasyon çözümleri.",
+      "items": ["E-ticaret", "Finans", "Sağlık Teknolojileri", "SaaS", "Pazarlama", "Lojistik"]
+    },
+    "blog": {
+      "title": "İçgörüler & Makaleler",
+      "subtitle": "Yapay zeka, otomasyon ve iş akışı zekası üzerine en son gelişmeler.",
+      "posts": [
+        {
+          "title": "İş Dünyasının Geleceği Otonom",
+          "author": "Alex Johnson",
+          "readTime": "5 dk okuma"
+        },
+        {
+          "title": "Kurumsal Firmalar için n8n Derinlemesine Bakış",
+          "author": "Samantha Lee",
+          "readTime": "8 dk okuma"
+        },
+        {
+          "title": "LangChain ile İlk Yapay Zeka Agentınızı Oluşturma",
+          "author": "David Chen",
+          "readTime": "12 dk okuma"
+        }
+      ],
+      "cta": "Devamını Oku"
+    },
+    "contact": {
+      "title": "Birlikte Otomatikleştirelim",
+      "subtitle": "Bize işinizden bahsedin, yapay zekanın nasıl yardımcı olabileceğini gösterelim.",
+      "form": {
+        "name": "Ad Soyad",
+        "company": "Şirket",
+        "email": "E-posta",
+        "message": "Mesajınız",
+        "submit": "Mesajı Gönder",
+        "placeholder": {
+          "name": "Tam adınız",
+          "company": "Şirketinizin adı",
+          "email": "siz@sirket.com",
+          "message": "Size nasıl otomasyon konusunda yardımcı olabiliriz?"
+        }
+      }
+    },
+    "footer": {
+      "slogan": "Tekrardan Zekaya.",
+      "copyright": "© 2025 Bisonar. Tüm hakları saklıdır."
+    }
+  }
+}

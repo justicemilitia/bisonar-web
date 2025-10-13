@@ -1,0 +1,21 @@
+<section id="showcase" class="py-24">
+    <div class="container mx-auto px-6 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">{{ t.showcase.title }}</h2>
+        <p class="text-lg gradient-text mb-16 max-w-2xl mx-auto font-semibold">{{ t.showcase.subtitle }}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for demo in t.showcase.demos %}
+            <div class="niotech-card niotech-card-border-glow p-4 rounded-xl text-center flex flex-col">
+                <img src="{{ [
+                    'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2FjNGYwYzAzNGUyNWMwNzk3ZDA2NWExZGU4Y2QyZjQ2ZjkxZWI3ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L1R1tvI9My5vdABhUI/giphy.gif',
+                    'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTRiOGY3ZjQ3NzI4MzU4ZWRmMDM1NmMyZDVmYmIyOWFkYjRjZDQ0OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/JtB5o1hTnMUTjIZBJH/giphy.gif',
+                    'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExODZjY2IxZDU1OGEyYjA4YzQ0MzQ1N2NhOTg2M2I1MDBkYTE3OTZmNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/S3nZFke4WXjKcCVE2z/giphy.gif'
+                ][loop.index0] }}" alt="{{ demo.title }}" class="w-full h-auto object-cover rounded-md mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex-grow">{{ demo.title }}</h3>
+                <button class="bg-transparent border border-[#4640FF] text-[#8A85FF] hover:bg-[#4640FF] hover:text-white dark:hover:text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm mt-auto">
+                    {{ t.showcase.cta }}
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

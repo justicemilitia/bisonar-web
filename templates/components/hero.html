@@ -1,0 +1,19 @@
+<section id="home" class="relative pt-24 pb-24 md:pt-40 md:pb-32">
+    <div class="container mx-auto px-6">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl lg:text-6xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight mb-6">
+                    <span class="gradient-text">{{ t.hero.headline }}</span>
+                </h1>
+                <p class="max-w-xl text-lg lg:text-xl text-gray-600 dark:text-slate-400 mb-10 mx-auto md:mx-0">
+                    {{ t.hero.subheadline }}
+                </p>
+            
+            </div>
+            <div>
+                <img src="{{ url_for('static', filename='images/n8n-sample.png') }}" alt="AI Automation Dashboard" class="rounded-xl shadow-2xl w-full h-auto shadow-blue-500/10">
+               
+            </div>
+        </div>
+    </div>
+</section>

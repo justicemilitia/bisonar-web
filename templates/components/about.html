@@ -1,0 +1,46 @@
+<section id="about" class="py-24">
+    <div class="container mx-auto px-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <!-- Left Column: Mission & Tech -->
+            <div class="text-center lg:text-left">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">{{ t.about.title }}</h2>
+                <div class="mb-12">
+                    <h3 class="text-2xl font-semibold gradient-text mb-4">{{ t.about.mission }}</h3>
+                    <p class="text-gray-600 dark:text-slate-400 text-lg">{{ t.about.missionText }}</p>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-semibold gradient-text mb-5">{{ t.about.techTitle }}</h3>
+                    <div class="flex flex-wrap gap-3 justify-center lg:justify-start">
+                        {% for tech in t.about.tech %}
+                        <span class="bg-gray-100 dark:bg-[#111936] text-gray-700 dark:text-slate-300 text-sm font-medium px-4 py-2 rounded-full border border-gray-200 dark:border-slate-700">
+                            {{ tech }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Team -->
+            <div>
+                <h3 class="text-3xl font-semibold text-gray-900 dark:text-white text-center mb-8">{{ t.about.teamTitle }}</h3>
+                <div class="grid grid-cols-2 gap-8">
+                    {% for member in t.about.team %}
+                    <div class="text-center group">
+                        <div class="relative inline-block mb-4">
+                            <img src="{{ [
+                                'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop',
+                                'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=400&auto=format&fit=crop',
+                                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop',
+                                'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&auto=format&fit=crop'
+                            ][loop.index0] }}" alt="{{ member.name }}" class="w-32 h-32 mx-auto rounded-full object-cover shadow-lg transition-all duration-300 group-hover:scale-105">
+                            <div class="absolute -inset-1 rounded-full border-2 border-transparent group-hover:border-[#4640FF] transition-all duration-300"></div>
+                        </div>
+                        <h4 class="font-bold text-gray-900 dark:text-white text-lg">{{ member.name }}</h4>
+                        <p class="gradient-text text-sm font-semibold">{{ member.title }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

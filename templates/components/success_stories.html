@@ -1,0 +1,27 @@
+<section id="success" class="py-24">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">{{ t.success.title }}</h2>
+            <p class="text-lg gradient-text max-w-2xl mx-auto font-semibold">{{ t.success.subtitle }}</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% set images = [
+                'https://images.unsplash.com/photo-1522204523234-8729aa6e3d5f?q=80&w=800&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?q=80&w=800&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=800&auto=format&fit=crop'
+            ] %}
+            {% for story in t.success.stories %}
+            <div class="group rounded-xl overflow-hidden relative niotech-card-border-glow aspect-square flex flex-col justify-end p-6 text-white" style="background: url('{{ images[loop.index0] }}'); background-size: cover; background-position: center;">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                <div class="relative z-10">
+                    <p class="text-sm font-semibold gradient-text mb-1">{{ story.industry }}</p>
+                    <h3 class="text-xl font-bold text-white mb-3">{{ story.title }}</h3>
+                    <div class="bg-gradient-to-r from-[#E61577] to-[#f5519c] text-white text-sm font-bold py-1 px-3 rounded-full inline-block self-start">
+                        {{ story.impact }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

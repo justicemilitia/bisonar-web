@@ -1,0 +1,90 @@
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-[#04091E]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+    <nav class="container mx-auto px-4 py-4">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl font-bold gradient-text">Bisonar</span>
+            </div>
+            
+            <!-- Desktop Menu - Hash link kullan -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#about" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                    {{ t.header.nav.about }}
+                </a>
+                <a href="#services" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                    {{ t.header.nav.services }}
+                </a>
+                <a href="#success" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                    {{ t.header.nav.success }}
+                </a>
+                <a href="#industries" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                    {{ t.header.nav.industries }}
+                </a>
+                <a href="#blog" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                    {{ t.header.nav.blog }}
+                </a>
+                <a href="#contact" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                    {{ t.header.nav.contact }}
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <!-- Language Switcher -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="switchLanguage('en')" class="px-2 py-1 text-sm rounded {% if current_lang == 'en' %}bg-purple-600 text-white{% else %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400{% endif %}">
+                        EN
+                    </button>
+                    <button onclick="switchLanguage('tr')" class="px-2 py-1 text-sm rounded {% if current_lang == 'tr' %}bg-purple-600 text-white{% else %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400{% endif %}">
+                        TR
+                    </button>
+                </div>
+
+                <!-- CTA Button -->
+               
+
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuButton" class="md:hidden p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden mt-4 space-y-4 pb-4">
+            <a href="#about" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                {{ t.header.nav.about }}
+            </a>
+            <a href="#services" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                {{ t.header.nav.services }}
+            </a>
+            <a href="#success" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                {{ t.header.nav.success }}
+            </a>
+            <a href="#industries" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                {{ t.header.nav.industries }}
+            </a>
+            <a href="#blog" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                {{ t.header.nav.blog }}
+            </a>
+            <a href="#contact" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                {{ t.header.nav.contact }}
+            </a>
+            <a href="#contact" class="gradient-button-niotech text-white font-bold py-2 px-6 rounded-full text-sm inline-block mt-4">
+                {{ t.header.cta }}
+            </a>
+        </div>
+    </nav>
+</header>
+
+<script>
+function switchLanguage(lang) {
+    fetch(`/set-language/${lang}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+}
+</script>
