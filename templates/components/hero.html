@@ -8,11 +8,25 @@
                 <p class="max-w-xl text-lg lg:text-xl text-gray-600 dark:text-slate-400 mb-10 mx-auto md:mx-0">
                     {{ t.hero.subheadline }}
                 </p>
-            
             </div>
             <div>
-                <img src="{{ url_for('static', filename='images/n8n-sample.png') }}" alt="AI Automation Dashboard" class="rounded-xl shadow-2xl w-full h-auto shadow-blue-500/10">
-               
+                <!-- Mevcut resmi koru, video ekle -->
+                <div class="relative">
+                    <!-- Video -->
+                    <div class="relative rounded-xl overflow-hidden shadow-2xl shadow-blue-500/10 mb-4">
+                        <video 
+                            class="w-full h-auto rounded-xl"
+                            autoplay 
+                            muted 
+                            loop 
+                            playsinline
+                            preload="auto">
+                            <source src="{{ url_for('static', filename='videos/n8n-demo.mp4') }}" type="video/mp4">
+                            Tarayıcınız video tag'ını desteklemiyor.
+                        </video>
+                    </div>
+                  
+                </div>
             </div>
         </div>
     </div>
