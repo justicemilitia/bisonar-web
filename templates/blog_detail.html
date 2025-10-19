@@ -10,7 +10,7 @@
         <main>
             <!-- Blog Detail Section -->
             <article class="py-16 md:py-24">
-                <div class="container mx-auto px-6 max-w-4xl">
+                <div class="container mx-auto px-6 max-w-12xl">
                     <!-- Breadcrumb -->
                     <nav class="mb-8">
                         <ol class="flex items-center space-x-2 text-sm text-gray-600 dark:text-slate-400">
@@ -39,7 +39,7 @@
                             {{ post.title }}
                         </h1>
                         
-                        <div class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-6 text-gray-600 dark:text-slate-400">
+                        <div class="flex flex-col sm:flex-row items-center justify-left space-y-3 sm:space-y-0 sm:space-x-6 text-gray-600 dark:text-slate-400">
                             <div class="flex items-center space-x-2">
                                 <div class="w-10 h-10 bg-gradient-to-r from-[#4640FF] to-[#8E45FF] rounded-full flex items-center justify-center text-white font-semibold text-sm">
                                     {{ post.author|first|upper }}
