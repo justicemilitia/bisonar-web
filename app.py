@@ -428,7 +428,7 @@ def chatbot_proxy():
 
         # External API'ye istek yap
         response = requests.post(
-            'https://g30rnaqf.rpcld.co/webhook/019d8437-e138-4003-a77f-c59b5b8429b2',
+            'https://g30rnaqf.rpcld.co/webhook/e1977560-4b62-48cd-bec2-530d2f3a62a4',
             json={
                 'message': message,
                 'sessionId': session_id,
