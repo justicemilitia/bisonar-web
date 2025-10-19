@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div class="container mx-auto px-6 max-w-4xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                {% if post %}Edit Post{% else %}New Post{% endif %}
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">
+                {% if post %}Update your blog post{% else %}Create a new blog post{% endif %}
+            </p>
+        </div>
+
+        <!-- Form -->
+        <form method="POST" enctype="multipart/form-data" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
+            <!-- Title -->
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Title *
+                </label>
+                <input type="text" id="title" name="title" value="{{ post.title if post }}" 
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                       required>
+            </div>
+
+            <!-- Slug -->
+            <div>
+                <label for="slug" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Slug *
+                </label>
+                <input type="text" id="slug" name="slug" value="{{ post.slug if post }}" 
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                       required>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">URL-friendly version of the title</p>
+            </div>
+
+            <!-- Excerpt -->
+            <div>
+                <label for="excerpt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Excerpt *
+                </label>
+                <textarea id="excerpt" name="excerpt" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                          required>{{ post.excerpt if post }}</textarea>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Brief description for preview</p>
+            </div>
+
+            <!-- Content -->
+            <div>
+                <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Content *
+                </label>
+                <textarea id="content" name="content" rows="15"
+                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white font-mono text-sm"
+                          required>{{ post.content if post }}</textarea>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Markdown supported</p>
+            </div>
+
+            <!-- Author & Read Time -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="author" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Author *
+                    </label>
+                    <input type="text" id="author" name="author" value="{{ post.author if post else 'Bisonar Team' }}" 
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                           required>
+                </div>
+                <div>
+                    <label for="read_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Read Time *
+                    </label>
+                    <input type="text" id="read_time" name="read_time" value="{{ post.read_time if post else '5 min read' }}" 
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                           required>
+                </div>
+            </div>
+
+            <!-- Image -->
+            <div>
+                <label for="image" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Featured Image
+                </label>
+                {% if post and post.image_url %}
+                <div class="mb-4">
+                    <img src="{{ post.image_url }}" alt="Current image" class="h-32 w-auto rounded-lg">
+                    <input type="hidden" name="current_image" value="{{ post.image_url }}">
+                </div>
+                {% endif %}
+                <input type="file" id="image" name="image" 
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700"
+                       accept="image/*">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 5MB</p>
+            </div>
+
+            <!-- Publish -->
+            <div class="flex items-center">
+                <input type="checkbox" id="is_published" name="is_published" 
+                       {% if post and post.is_published or not post %}checked{% endif %}
+                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="is_published" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                    Publish immediately
+                </label>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <a href="{{ url_for('admin_dashboard') }}" class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold transition-colors">
+                    {% if post %}Update Post{% else %}Create Post{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Auto-generate slug from title
+document.getElementById('title').addEventListener('input', function() {
+    const slugInput = document.getElementById('slug');
+    if (!slugInput.value) {
+        const slug = this.value
+            .toLowerCase()
+            .replace(/[^a-z0-9 -]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+        slugInput.value = slug;
+    }
+});
+</script>
+{% endblock %}

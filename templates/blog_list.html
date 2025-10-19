@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-gray-50 text-gray-900 dark:bg-[#04091E] dark:text-slate-300 overflow-hidden">
+    <div class="aurora-blob aurora-blob-1"></div>
+    <div class="aurora-blob aurora-blob-2"></div>
+    <div class="relative z-10">
+        {% include "components/header.html" %}
+        
+        <main>
+            <!-- Blog List Section -->
+            <section class="py-24">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-16">
+                        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">Blog</h1>
+                        <p class="text-lg text-gray-600 dark:text-slate-400 max-w-2xl mx-auto">Latest insights on AI automation, n8n workflows, and business technology</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {% for post in blog_posts %}
+                        <div class="niotech-card niotech-card-border-glow rounded-xl overflow-hidden flex flex-col group">
+                            <div class="aspect-video overflow-hidden">
+                                <img src="{{ post.image_url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 flex-grow">{{ post.title }}</h3>
+                                <p class="text-gray-600 dark:text-slate-400 text-sm mb-4 flex-grow">{{ post.excerpt }}</p>
+                                <div class="text-sm text-gray-500 dark:text-slate-400 mb-4">
+                                    <span>By {{ post.author }}</span> • <span>{{ post.read_time }}</span>
+                                </div>
+                                <a href="{{ url_for('blog_detail', slug=post.slug) }}" class="text-[#8A85FF] hover:text-[#4640FF] dark:hover:text-white font-semibold self-start group/link transition-all duration-300">
+                                    Read More <span class="inline-block transform group-hover/link:translate-x-1 transition-transform">→</span>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        {% include "components/footer.html" %}
+        
+        <!-- Back to Top Button -->
+        <button id="backToTop" class="fixed bottom-8 right-8 p-3 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-all duration-300 opacity-0 invisible">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+            </svg>
+        </button>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="container mx-auto px-6 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Blog Management</h1>
+            <p class="text-gray-600 dark:text-gray-400">Manage your blog posts</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="mb-6 flex justify-between items-center">
+            <a href="{{ url_for('admin_new_post') }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                + New Post
+            </a>
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+                Total Posts: {{ posts|length }}
+            </div>
+        </div>
+
+        <!-- Posts Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Post
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Author
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Date
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for post in posts %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <img class="h-10 w-10 rounded-lg object-cover" src="{{ post.image_url }}" alt="{{ post.title }}">
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                            {{ post.title }}
+                                        </div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                                            /{{ post.slug }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 dark:text-white">{{ post.author }}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">{{ post.read_time }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if post.is_published %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Published
+                                </span>
+                                {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Draft
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {{ post.created_at[:10] }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                <a href="{{ url_for('blog_detail', slug=post.slug) }}" target="_blank" class="text-blue-600 hover:text-blue-900">View</a>
+                                <a href="{{ url_for('admin_edit_post', post_id=post.id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                <form method="POST" action="{{ url_for('admin_toggle_post', post_id=post.id) }}" class="inline">
+                                    {% if post.is_published %}
+                                    <button type="submit" class="text-yellow-600 hover:text-yellow-900">Unpublish</button>
+                                    {% else %}
+                                    <button type="submit" class="text-green-600 hover:text-green-900">Publish</button>
+                                    {% endif %}
+                                </form>
+                                <form method="POST" action="{{ url_for('admin_delete_post', post_id=post.id) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                                    <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if not posts %}
+        <div class="text-center py-12">
+            <div class="text-gray-400 dark:text-gray-500 text-lg">No posts yet</div>
+            <a href="{{ url_for('admin_new_post') }}" class="inline-block mt-4 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                Create Your First Post
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
