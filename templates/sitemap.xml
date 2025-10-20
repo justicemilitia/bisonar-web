@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    
+    <!-- Ana Sayfa ve SPA Sections -->
+    {% for section in spa_sections %}
+    <url>
+        <loc>{{ base_url }}/{{ section.loc if section.loc != '' else '' }}</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/{{ section.loc if section.loc != '' else '' }}?lang=tr"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/{{ section.loc if section.loc != '' else '' }}?lang=en"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/{{ section.loc if section.loc != '' else '' }}"/>
+        <lastmod>{{ lastmod }}</lastmod>
+        <changefreq>{{ section.changefreq }}</changefreq>
+        <priority>{{ section.priority }}</priority>
+    </url>
+    {% endfor %}
+    
+    <!-- Blog Ana Sayfa -->
+    <url>
+        <loc>{{ base_url }}/blog</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/blog?lang=tr"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/blog?lang=en"/>
+        <lastmod>{{ lastmod }}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    
+    <!-- Blog Yazıları -->
+    {% for post in blog_posts %}
+    <url>
+        <loc>{{ base_url }}/blog/{{ post.slug }}</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/blog/{{ post.slug }}?lang=tr"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/blog/{{ post.slug }}?lang=en"/>
+        <lastmod>{{ post.updated_at or post.created_at }}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    {% endfor %}
+    
+</urlset>

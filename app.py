@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, jsonify, request, redirect, url_for, flash, Response
+from flask import Flask, render_template, session, jsonify, request, redirect, url_for, flash, Response,send_from_directory
 import json
 import requests
 import sqlite3
@@ -459,6 +459,86 @@ def chatbot_proxy():
             'response': 'Teknik bir hata oluştu. Lütfen daha sonra tekrar deneyin.',
             'quickReplies': ['n8n Otomasyonu', 'AI İş Akışları', 'Danışmanlık', 'Fiyat Bilgisi']
         }), 200
+    
+@app.route('/sitemap.xml')
+def sitemap():
+    """Generate dynamic sitemap.xml"""
+    try:
+        # Dynamic base URL - hem local hem production için
+        if request.host == '127.0.0.1:8000' or request.host.startswith('localhost'):
+            base_url = f'http://{request.host}'
+        else:
+            base_url = 'https://www.bisonar.com'
+        
+        # Get published blog posts from database
+        conn = get_db_connection()
+        blog_posts = conn.execute('''
+            SELECT slug, updated_at, created_at 
+            FROM posts 
+            WHERE is_published = 1
+            ORDER BY created_at DESC
+        ''').fetchall()
+        conn.close()
+        
+        # SPA sections
+        spa_sections = [
+            {'loc': '', 'priority': '1.0', 'changefreq': 'weekly'},
+            {'loc': '#about', 'priority': '0.7', 'changefreq': 'monthly'},
+            {'loc': '#services', 'priority': '0.8', 'changefreq': 'monthly'},
+            {'loc': '#success', 'priority': '0.7', 'changefreq': 'monthly'},
+            {'loc': '#industries', 'priority': '0.7', 'changefreq': 'monthly'},
+            {'loc': '#contact', 'priority': '0.6', 'changefreq': 'monthly'}
+        ]
+        
+        response = render_template(
+            'sitemap.xml', 
+            base_url=base_url,
+            spa_sections=spa_sections,
+            blog_posts=blog_posts,
+            lastmod=datetime.now().strftime('%Y-%m-%d')
+        )
+        
+        return Response(response, mimetype='application/xml')
+    
+    except Exception as e:
+        print(f"Sitemap error: {e}")
+        return "Sitemap generation error", 500
+
+@app.route('/sitemap-blog.xml')
+def sitemap_blog():
+    """Generate blog-specific sitemap"""
+    try:
+        # Dynamic base URL
+        if request.host == '127.0.0.1:8000' or request.host.startswith('localhost'):
+            base_url = f'http://{request.host}'
+        else:
+            base_url = 'https://www.bisonar.com'
+        
+        conn = get_db_connection()
+        blog_posts = conn.execute('''
+            SELECT slug, updated_at, created_at, title
+            FROM posts 
+            WHERE is_published = 1
+            ORDER BY created_at DESC
+        ''').fetchall()
+        conn.close()
+        
+        response = render_template(
+            'sitemap-blog.xml',
+            base_url=base_url,
+            blog_posts=blog_posts,
+            lastmod=datetime.now().strftime('%Y-%m-%d')
+        )
+        
+        return Response(response, mimetype='application/xml')
+    
+    except Exception as e:
+        print(f"Blog sitemap error: {e}")
+        return "Blog sitemap generation error", 500
+
+@app.route('/robots.txt')
+def robots():
+    return send_from_directory(app.static_folder, 'robots.txt')
 
 @app.route('/set-language/<lang>')
 def set_language(lang):

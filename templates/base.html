@@ -1,4 +1,5 @@
-<html lang="en" class="scroll-smooth dark">
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth dark" data-default-lang="tr">
 <head>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-921FP71YY9"></script>
@@ -6,51 +7,72 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-921FP71YY9');
     </script>
+    
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Multi-language SEO -->
+    <link rel="alternate" hreflang="tr" href="https://www.bisonar.com/tr" />
+    <link rel="alternate" hreflang="en" href="https://www.bisonar.com/en" />
+    <link rel="alternate" hreflang="x-default" href="https://www.bisonar.com/" />
+    
+    <!-- Dynamic Title & Description -->
+    <title>{% block title %}Bisonar | AI Automation & Intelligent Workflows{% endblock %}</title>
+    <meta name="description" content="n8n-based AI automation systems, AI-powered workflows and digital transformation consulting. Multilingual solutions.">
+    <link rel="canonical" href="https://www.bisonar.com/{{ request.path if request.path != '/' else '' }}">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <!-- Open Graph -->
+    <meta property="og:title" content="Bisonar | AI Automation & Intelligent Workflows">
+    <meta property="og:description" content="n8n AI automation solutions in Turkish and English. Intelligent workflow systems for digital transformation.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.bisonar.com/">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Bisonar",
+        "url": "https://www.bisonar.com",
+        "description": "Multilingual AI automation and workflow solutions",
+        "availableLanguage": ["Turkish", "English"]
+    }
+    </script>
+
+    <!-- Favicons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/static/images/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicon-16x16.png">
     <link rel="manifest" href="/static/images/site.webmanifest">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Bisonar | AI Automation & Intelligent Workflows{% endblock %}</title>
     
-    <!-- Tailwind CSS -->
+    <!-- CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
-    
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/style.css">
-     <link rel="stylesheet" href="/static/css/chat-bot.css">
+    <link rel="stylesheet" href="/static/css/chat-bot.css">
 </head>
 <body class="leading-relaxed overflow-x-hidden">
     {% block content %}{% endblock %}
     
     <!-- CHATBOT WIDGET -->
     <div class="chatbot-widget">
-        <button class="chatbot-button" onclick="toggleChatbot()">
-            🤖
-        </button>
+        <button class="chatbot-button" onclick="toggleChatbot()">🤖</button>
         <div class="chatbot-container" id="chatbotContainer">
             <div class="chatbot-header">
-                <h3>AI Danışmanlık Asistanı</h3>
+                <h3>AI Danışmanlık Asistanı / AI Consulting Assistant</h3>
                 <button class="close-chatbot" onclick="toggleChatbot()">×</button>
             </div>
             <div class="chatbot-messages" id="chatbotMessages">
                 <div class="chat-message bot-message">
-                    👋 Merhaba! Bisonar AI Asistanına hoş geldiniz. Size nasıl yardımcı olabilirim?
+                    👋 Merhaba! Bisonar AI Asistanına hoş geldiniz. Size nasıl yardımcı olabilirim?<br>
+                    👋 Hello! Welcome to Bisonar AI Assistant. How can I help you?
                 </div>
             </div>
             <div class="chatbot-quick-replies" id="chatbotQuickReplies">
@@ -60,18 +82,14 @@
                 <button class="quick-reply-btn" onclick="sendQuickReply('fiyat bilgisi')">Fiyat Bilgisi</button>
             </div>
             <div class="chatbot-input-container">
-                <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Mesajınızı yazın..." onkeypress="handleChatbotKeyPress(event)">
-                <button class="send-button" onclick="sendChatbotMessage()">Gönder</button>
+                <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Mesajınızı yazın / Type your message..." onkeypress="handleChatbotKeyPress(event)">
+                <button class="send-button" onclick="sendChatbotMessage()">Gönder / Send</button>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script src="/static/js/main.js"></script>
-    
-    <!-- CHATBOT JAVASCRIPT -->
     <script src="/static/js/chat-bot.js"></script>
-
     {% block extra_js %}{% endblock %}
 </body>
 </html>
