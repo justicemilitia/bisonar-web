@@ -20,10 +20,15 @@
                         {% for post in blog_posts %}
                         <div class="niotech-card niotech-card-border-glow rounded-xl overflow-hidden flex flex-col group">
                             <div class="aspect-video overflow-hidden">
-                                <img src="{{ post.image_url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                <img src="{{ post.image_url }}" 
+                                     alt="{{ post.title }}" 
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                     width="{{ get_image_dimensions(post.image_url).width }}"
+                                     height="{{ get_image_dimensions(post.image_url).height }}"
+                                     loading="lazy">
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
-                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 flex-grow">{{ post.title }}</h3>
+                                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2 flex-grow">{{ post.title }}</h2>
                                 <p class="text-gray-600 dark:text-slate-400 text-sm mb-4 flex-grow">{{ post.excerpt }}</p>
                                 <div class="text-sm text-gray-500 dark:text-slate-400 mb-4">
                                     <span>By {{ post.author }}</span> • <span>{{ post.read_time }}</span>
@@ -40,13 +45,6 @@
         </main>
         
         {% include "components/footer.html" %}
-        
-        <!-- Back to Top Button -->
-        <button id="backToTop" class="fixed bottom-8 right-8 p-3 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-all duration-300 opacity-0 invisible">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
-            </svg>
-        </button>
     </div>
 </div>
 {% endblock %}

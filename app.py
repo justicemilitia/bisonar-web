@@ -1,11 +1,11 @@
-from flask import Flask, render_template, session, jsonify, request, redirect, url_for, flash, Response,send_from_directory
+from flask import Flask, render_template, session, jsonify, request, redirect, url_for, flash, Response, send_from_directory, g
 import json
 import requests
 import sqlite3
 import os
 from datetime import datetime
 from markdown import markdown
-from functools import wraps  # Bu satırı ekleyin
+from functools import wraps
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -24,6 +24,103 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 # Upload klasörünü oluştur
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+@app.before_request
+def set_global_template_vars():
+    """Tüm template'ler için global değişkenleri ayarla"""
+    # Base URL'yi belirle
+    if request.host == '127.0.0.1:8000' or request.host.startswith('localhost'):
+        base_url = f'http://{request.host}'
+    else:
+        base_url = 'https://www.bisonar.com'
+    
+    # Mevcut URL (hash'leri temizle)
+    current_path = request.path
+    if '#' in current_path:
+        current_path = current_path.split('#')[0]
+    
+    g.current_url = f"{base_url}{current_path}"
+    g.base_url = base_url
+    
+    # Varsayılan meta bilgileri
+    g.meta_title = 'Bisonar - AI Automation Solutions'
+    g.meta_description = 'Professional AI automation services with n8n workflows and ChatGPT integration'
+    g.canonical_url = g.current_url
+    g.og_type = 'website'
+    g.og_image = f"{base_url}/static/images/og-default.jpg"
+
+@app.after_request
+def set_security_headers(response):
+    # HSTS Header - sadece production'da
+    if not request.host.startswith(('127.0.0.1', 'localhost')):
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    # Content Security Policy - daha esnek
+    response.headers['Content-Security-Policy'] = "default-src 'self' https:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https: fonts.googleapis.com; font-src 'self' https: fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'self' https:;"
+    
+    # X-Frame-Options
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    
+    # X-Content-Type-Options
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # Referrer Policy
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # X-XSS-Protection
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    return response
+
+@app.context_processor
+def utility_processor():
+    def get_canonical_url():
+        """Mevcut sayfa için canonical URL - hash'leri temizle"""
+        current_path = request.path
+        if '#' in current_path:
+            current_path = current_path.split('#')[0]
+        
+        if request.host == '127.0.0.1:8000' or request.host.startswith('localhost'):
+            base_url = f'http://{request.host}'
+        else:
+            base_url = 'https://www.bisonar.com'
+        
+        return f"{base_url}{current_path}"
+    
+    def generate_hreflang():
+        """Hreflang URL'lerini oluştur"""
+        base_url = 'https://www.bisonar.com' if not request.host.startswith(('127.0.0.1', 'localhost')) else f'http://{request.host}'
+        
+        current_path = request.path
+        if '#' in current_path:
+            current_path = current_path.split('#')[0]
+        
+        hreflangs = {
+            'x-default': f"{base_url}{current_path}",
+            'en': f"{base_url}{current_path}",
+            'tr': f"{base_url}{current_path}"
+        }
+        
+        return hreflangs
+    
+    def get_image_dimensions(image_url):
+        """Resim boyutlarını belirle"""
+        if 'unsplash' in image_url:
+            return {'width': 800, 'height': 400}
+        else:
+            return {'width': 400, 'height': 225}
+    
+    return dict(
+        get_canonical_url=get_canonical_url,
+        generate_hreflang=generate_hreflang,
+        get_image_dimensions=get_image_dimensions,
+        meta_title=g.get('meta_title', 'Bisonar - AI Automation Solutions'),
+        meta_description=g.get('meta_description', 'Professional AI automation services'),
+        canonical_url=g.get('canonical_url'),
+        current_url=g.get('current_url'),
+        og_type=g.get('og_type', 'website'),
+        og_image=g.get('og_image')
+    )
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -93,106 +190,20 @@ def get_template_data():
 # Initialize database on startup
 init_db()
 
-# Add sample blog posts if none exist
-def add_sample_posts():
-    conn = get_db_connection()
-    existing = conn.execute('SELECT COUNT(*) as count FROM posts').fetchone()['count']
-    
-    if existing == 0:
-        sample_posts = [
-            {
-                'title': 'AI Automation: Revolutionizing Business Processes',
-                'slug': 'ai-automation-revolutionizing-business-processes',
-                'content': '''
-# AI Automation: Revolutionizing Business Processes
+# HTTPS yönlendirmesi
+@app.before_request
+def enforce_https():
+    """HTTP'den HTTPS'ye yönlendir (production'da)"""
+    if not request.is_secure and not request.host.startswith(('127.0.0.1', 'localhost')):
+        url = request.url.replace('http://', 'https://', 1)
+        return redirect(url, code=301)
 
-Artificial Intelligence is transforming how businesses operate. In this post, we explore how AI automation can streamline your workflows and boost productivity.
-
-## Key Benefits
-
-- **Time Savings**: Automate repetitive tasks
-- **Error Reduction**: Minimize human errors
-- **Scalability**: Handle increased workload effortlessly
-
-## Real-World Applications
-
-From customer service chatbots to data analysis, AI automation is becoming essential for modern businesses.
-
-*Published on: {}*
-                '''.format(datetime.now().strftime('%B %d, %Y')),
-                'excerpt': 'Discover how AI automation can transform your business processes and increase efficiency.',
-                'author': 'Bisonar Team',
-                'read_time': '5 min read',
-                'image_url': 'https://images.unsplash.com/photo-1516110833967-0b5716ca1387?q=80&w=800&auto=format&fit=crop'
-            },
-            {
-                'title': 'n8n Workflows: Best Practices for 2024',
-                'slug': 'n8n-workflows-best-practices-2024',
-                'content': '''
-# n8n Workflows: Best Practices for 2024
-
-n8n is a powerful workflow automation tool. Here are the best practices for creating efficient and maintainable workflows.
-
-## Planning Your Workflow
-
-1. **Define Objectives**: What do you want to achieve?
-2. **Map Dependencies**: Understand task relationships
-3. **Error Handling**: Plan for failures
-
-## Optimization Tips
-
-- Use webhooks for real-time triggers
-- Implement proper logging
-- Test thoroughly before deployment
-
-*Published on: {}*
-                '''.format(datetime.now().strftime('%B %d, %Y')),
-                'excerpt': 'Learn the best practices for creating efficient and scalable n8n workflows in 2024.',
-                'author': 'Bisonar Team',
-                'read_time': '7 min read',
-                'image_url': 'https://images.unsplash.com/photo-1620712943543-26fc76334419?q=80&w=800&auto=format&fit=crop'
-            },
-            {
-                'title': 'Integrating ChatGPT with Your Business Applications',
-                'slug': 'integrating-chatgpt-business-applications',
-                'content': '''
-# Integrating ChatGPT with Your Business Applications
-
-ChatGPT integration can enhance various business functions. Learn how to seamlessly integrate AI into your applications.
-
-## Integration Methods
-
-- **API Integration**: Direct API calls
-- **Webhook Triggers**: Event-based responses
-- **Custom Middleware**: Bridge between systems
-
-## Use Cases
-
-- Customer support automation
-- Content generation
-- Data analysis and reporting
-
-*Published on: {}*
-                '''.format(datetime.now().strftime('%B %d, %Y')),
-                'excerpt': 'Explore different methods to integrate ChatGPT with your business applications for enhanced functionality.',
-                'author': 'Bisonar Team',
-                'read_time': '6 min read',
-                'image_url': 'https://images.unsplash.com/photo-1634912265239-49925890ab0b?q=80&w=800&auto=format&fit=crop'
-            }
-        ]
-        
-        for post in sample_posts:
-            conn.execute('''
-                INSERT INTO posts (title, slug, content, excerpt, author, read_time, image_url)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (post['title'], post['slug'], post['content'], post['excerpt'], 
-                  post['author'], post['read_time'], post['image_url']))
-        
-        conn.commit()
-    conn.close()
-
-# Add sample posts on startup
-add_sample_posts()
+@app.before_request  
+def normalize_url():
+    """URL'leri normalize et - çoklu slash'leri düzelt"""
+    if '//' in request.path and request.path != '//':
+        new_path = request.path.replace('//', '/')
+        return redirect(new_path, code=301)
 
 # Admin Routes
 @app.route('/admin')
@@ -318,6 +329,11 @@ def admin_toggle_post(post_id):
 def index():
     template_data = get_template_data()
     
+    # Ana sayfa için meta bilgilerini güncelle
+    g.meta_title = 'Bisonar - AI Automation & Intelligent Workflows'
+    g.meta_description = 'n8n-based AI automation systems, AI-powered workflows and digital transformation consulting. Multilingual solutions.'
+    g.canonical_url = g.base_url  # Ana sayfa için sadece base URL
+    
     # Get latest 3 blog posts for homepage
     conn = get_db_connection()
     posts = conn.execute('''
@@ -329,7 +345,6 @@ def index():
     ''').fetchall()
     conn.close()
     
-    # Convert to list of dicts
     blog_posts = [dict(post) for post in posts]
     
     return render_template('index.html', **template_data, blog_posts=blog_posts)
@@ -338,6 +353,12 @@ def index():
 def blog_list():
     """Blog list page"""
     template_data = get_template_data()
+    
+    # Blog listesi için meta bilgilerini güncelle
+    g.meta_title = 'Blog - AI Automation Insights | Bisonar'
+    g.meta_description = 'Latest insights on AI automation, n8n workflows, and business technology'
+    g.canonical_url = f"{g.base_url}/blog"
+    g.og_type = 'website'
     
     conn = get_db_connection()
     posts = conn.execute('''
@@ -369,8 +390,14 @@ def blog_detail(slug):
         return "Post not found", 404
     
     post_dict = dict(post)
-    # Convert markdown to HTML
     post_dict['content_html'] = markdown(post_dict['content'])
+    
+    # Blog detayı için meta bilgilerini güncelle
+    g.meta_title = f"{post_dict['title']} | Bisonar"
+    g.meta_description = post_dict['excerpt']
+    g.canonical_url = f"{g.base_url}/blog/{slug}"
+    g.og_type = 'article'
+    g.og_image = post_dict['image_url']
     
     return render_template('blog_detail.html', **template_data, post=post_dict)
 

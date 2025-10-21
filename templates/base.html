@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr" class="scroll-smooth dark" data-default-lang="tr">
+<html lang="{{ current_lang }}" class="scroll-smooth dark" data-default-lang="{{ current_lang }}">
 <head>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-921FP71YY9"></script>
@@ -12,22 +12,25 @@
     
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Canonical URL - TEK BİR TANE -->
+    <link rel="canonical" href="{{ canonical_url }}">
     
     <!-- Multi-language SEO -->
-    <link rel="alternate" hreflang="tr" href="https://www.bisonar.com/tr" />
-    <link rel="alternate" hreflang="en" href="https://www.bisonar.com/en" />
-    <link rel="alternate" hreflang="x-default" href="https://www.bisonar.com/" />
+    <link rel="alternate" hreflang="x-default" href="{{ generate_hreflang()['x-default'] }}" />
+    <link rel="alternate" hreflang="en" href="{{ generate_hreflang()['en'] }}" />
+    <link rel="alternate" hreflang="tr" href="{{ generate_hreflang()['tr'] }}" />
     
     <!-- Dynamic Title & Description -->
-    <title>{% block title %}Bisonar | AI Automation & Intelligent Workflows{% endblock %}</title>
-    <meta name="description" content="n8n-based AI automation systems, AI-powered workflows and digital transformation consulting. Multilingual solutions.">
-    <link rel="canonical" href="https://www.bisonar.com/{{ request.path if request.path != '/' else '' }}">
-    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <title>{{ meta_title }}</title>
+    <meta name="description" content="{{ meta_description }}">
+    
     <!-- Open Graph -->
-    <meta property="og:title" content="Bisonar | AI Automation & Intelligent Workflows">
-    <meta property="og:description" content="n8n AI automation solutions in Turkish and English. Intelligent workflow systems for digital transformation.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.bisonar.com/">
+    <meta property="og:title" content="{{ meta_title }}">
+    <meta property="og:description" content="{{ meta_description }}">
+    <meta property="og:type" content="{{ og_type }}">
+    <meta property="og:url" content="{{ current_url }}">
+    <meta property="og:image" content="{{ og_image }}">
     
     <!-- Structured Data -->
     <script type="application/ld+json">
