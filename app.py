@@ -579,6 +579,125 @@ def set_language(lang):
         session['language'] = lang
     return jsonify({'success': True, 'language': lang})
 
+# Admin Routes - BUNLARI EKLE
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    conn = get_db_connection()
+    posts = conn.execute('''
+        SELECT id, title, slug, excerpt, author, read_time, image_url, created_at, is_published
+        FROM posts 
+        ORDER BY created_at DESC
+    ''').fetchall()
+    conn.close()
+    
+    blog_posts = [dict(post) for post in posts]
+    return render_template('admin/dashboard.html', posts=blog_posts)
+
+@app.route('/admin/posts/new', methods=['GET', 'POST'])
+@admin_required
+def admin_new_post():
+    if request.method == 'POST':
+        title = request.form['title']
+        slug = request.form['slug']
+        content = request.form['content']
+        excerpt = request.form['excerpt']
+        author = request.form['author']
+        read_time = request.form['read_time']
+        is_published = 'is_published' in request.form
+        
+        # Image upload
+        image_url = ''
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                image_url = f'/static/uploads/{filename}'
+        
+        # Default image if none uploaded
+        if not image_url:
+            image_url = 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=800&auto=format&fit=crop'
+        
+        conn = get_db_connection()
+        try:
+            conn.execute('''
+                INSERT INTO posts (title, slug, content, excerpt, author, read_time, image_url, is_published)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (title, slug, content, excerpt, author, read_time, image_url, is_published))
+            conn.commit()
+            return redirect(url_for('admin_dashboard'))
+        except sqlite3.IntegrityError:
+            flash('Slug already exists!', 'error')
+        finally:
+            conn.close()
+    
+    return render_template('admin/edit_post.html', post=None)
+
+@app.route('/admin/posts/<int:post_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_post(post_id):
+    conn = get_db_connection()
+    
+    if request.method == 'POST':
+        title = request.form['title']
+        slug = request.form['slug']
+        content = request.form['content']
+        excerpt = request.form['excerpt']
+        author = request.form['author']
+        read_time = request.form['read_time']
+        is_published = 'is_published' in request.form
+        
+        # Image upload
+        image_url = request.form.get('current_image', '')
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                image_url = f'/static/uploads/{filename}'
+        
+        try:
+            conn.execute('''
+                UPDATE posts 
+                SET title=?, slug=?, content=?, excerpt=?, author=?, read_time=?, image_url=?, is_published=?, updated_at=CURRENT_TIMESTAMP
+                WHERE id=?
+            ''', (title, slug, content, excerpt, author, read_time, image_url, is_published, post_id))
+            conn.commit()
+            return redirect(url_for('admin_dashboard'))
+        except sqlite3.IntegrityError:
+            flash('Slug already exists!', 'error')
+    
+    post = conn.execute('SELECT * FROM posts WHERE id = ?', (post_id,)).fetchone()
+    conn.close()
+    
+    if post is None:
+        return "Post not found", 404
+    
+    return render_template('admin/edit_post.html', post=dict(post))
+
+@app.route('/admin/posts/<int:post_id>/delete', methods=['POST'])
+@admin_required
+def admin_delete_post(post_id):
+    conn = get_db_connection()
+    conn.execute('DELETE FROM posts WHERE id = ?', (post_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/posts/<int:post_id>/toggle', methods=['POST'])
+@admin_required
+def admin_toggle_post(post_id):
+    conn = get_db_connection()
+    post = conn.execute('SELECT is_published FROM posts WHERE id = ?', (post_id,)).fetchone()
+    new_status = not post['is_published']
+    conn.execute('UPDATE posts SET is_published = ? WHERE id = ?', (new_status, post_id))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin_dashboard'))
+
 if __name__ == '__main__':
     import jinja2
     jinja2.clear_caches()
