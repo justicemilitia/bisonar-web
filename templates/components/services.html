@@ -1,9 +1,9 @@
-<section id="services" class="py-24">
+<section id="services" class="py-24 bg-gradient-to-b from-white to-gray-50 dark:from-[#04091E] dark:to-slate-900">
     <div class="container mx-auto px-6 text-center">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">{{ t.services.title }}</h2>
         <p class="text-lg gradient-text mb-16 max-w-2xl mx-auto font-semibold">{{ t.services.subtitle }}</p>
         
-        <!-- DEBUG: Manuel services listesi kullan -->
+        <!-- Manuel services listesi kullan -->
         {% set services_list = [
             {
                 "title": "AI Workflow Automation", 
@@ -23,37 +23,457 @@
             }
         ] %}
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-left">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
             {% for service in services_list %}
-            <div class="niotech-card niotech-card-border-glow p-8 rounded-xl flex flex-col">
-                <div class="mb-5 w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#4640FF] to-[#8E45FF] text-white">
+            <div class="service-card group relative bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-slate-700 hover:border-[#4640FF] overflow-hidden">
+                <!-- Hover Effect Background -->
+                <div class="absolute inset-0 bg-gradient-to-br from-[#4640FF]/5 to-[#8E45FF]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                
+                <!-- Icon -->
+                <div class="relative mb-5 w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#4640FF] to-[#8E45FF] text-white group-hover:scale-110 transition-transform duration-300">
                     {% if loop.index0 == 0 %}
+                    <!-- AI Workflow Automation Icon -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 00-4.132 0M9.75 3.104a2.25 2.25 0 00-1.632-2.163M14.25 3.104v5.714m0 0a2.25 2.25 0 01.659 1.591l2.581 3.441M14.25 3.104c.251.023.501.05.75.082M14.25 3.104a24.301 24.301 0 014.132 0M14.25 3.104a2.25 2.25 0 011.632-2.163m-5.25 17.625l.381.507a2.25 2.25 0 01.298 1.159v.625a2.25 2.25 0 002.25 2.25h.381a2.25 2.25 0 002.25-2.25v-.625a2.25 2.25 0 01.298-1.159l.381-.507M12 12h.008v.008H12V12z" />
                     </svg>
                     {% elif loop.index0 == 1 %}
+                    <!-- n8n Integration Icon -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
                     </svg>
                     {% elif loop.index0 == 2 %}
+                    <!-- Custom AI Agents Icon -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m1.5-4.5V21" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m0 0V8.25m0 11.25S10.5 17.25 9 15.75M12 19.5S13.5 17.25 15 15.75" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     {% elif loop.index0 == 3 %}
+                    <!-- Data Intelligence Icon -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 100 15 7.5 7.5 0 000-15z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.25-5.25" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
                     </svg>
                     {% endif %}
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex-grow">{{ service.title }}</h3>
-                <p class="text-gray-600 dark:text-slate-400 mb-4">{{ service.description }}</p>
-                <a href="#contact" class="text-[#8A85FF] hover:text-[#4640FF] dark:hover:text-white mt-auto font-semibold group transition-all duration-300">
-                    {{ t.services.cta }} <span class="inline-block transform group-hover:translate-x-1 transition-transform">→</span>
-                </a>
+
+                <!-- Title -->
+                <h3 class="relative text-xl font-bold text-gray-900 dark:text-white mb-3 flex-grow group-hover:text-[#4640FF] dark:group-hover:text-white transition-colors duration-300">
+                    {{ service.title }}
+                </h3>
+
+                <!-- Description -->
+                <p class="relative text-gray-600 dark:text-slate-400 mb-4 leading-relaxed">
+                    {{ service.description }}
+                </p>
+
+                <!-- Features List (Hover'da görünecek) -->
+                <div class="relative features-list opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                    <div class="space-y-2 mb-4">
+                        {% if loop.index0 == 0 %}
+                        <!-- AI Workflow Features -->
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Intelligent Document Processing' if current_lang == 'en' else 'Akıllı Belge İşleme' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Predictive Analytics' if current_lang == 'en' else 'Tahmine Dayalı Analitik' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Natural Language Understanding' if current_lang == 'en' else 'Doğal Dil Anlama' }}</span>
+                        </div>
+                        {% elif loop.index0 == 1 %}
+                        <!-- n8n Integration Features -->
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ '300+ Pre-built Connectors' if current_lang == 'en' else '300+ Hazır Bağlayıcı' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Real-time Data Sync' if current_lang == 'en' else 'Gerçek Zamanlı Veri Senkronizasyonu' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Custom API Integration' if current_lang == 'en' else 'Özel API Entegrasyonu' }}</span>
+                        </div>
+                        {% elif loop.index0 == 2 %}
+                        <!-- Custom AI Agents Features -->
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ '24/7 Customer Support' if current_lang == 'en' else '7/24 Müşteri Desteği' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Context-Aware Conversations' if current_lang == 'en' else 'Bağlam Farkında Konuşmalar' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Continuous Learning' if current_lang == 'en' else 'Sürekli Öğrenme' }}</span>
+                        </div>
+                        {% elif loop.index0 == 3 %}
+                        <!-- Data Intelligence Features -->
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Real-time Dashboards' if current_lang == 'en' else 'Gerçek Zamanlı Gösterge Panelleri' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Automated Data Collection' if current_lang == 'en' else 'Otomatik Veri Toplama' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Predictive Modeling' if current_lang == 'en' else 'Tahmine Dayalı Modelleme' }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- CTA Button -->
+                <div class="relative mt-auto pt-4 border-t border-gray-100 dark:border-slate-700">
+                    <button onclick="showServiceModal({{ loop.index0 }})" class="w-full text-[#8A85FF] hover:text-[#4640FF] dark:hover:text-white font-semibold group transition-all duration-300 flex items-center justify-center py-2 px-4 rounded-lg hover:bg-[#4640FF]/10">
+                        {{ t.services.cta }}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             {% endfor %}
         </div>
     </div>
 </section>
+
+<!-- Service Modal -->
+<div id="serviceModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 dark:text-white"></h3>
+                <button onclick="closeServiceModal()" class="text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="modalContent" class="prose dark:prose-invert max-w-none">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.service-card {
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+}
+
+.features-list {
+    flex-grow: 1;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #4640FF 0%, #8E45FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+</style>
+
+<script>
+// Service details for modal - Multi-language support
+const serviceDetails = {
+    0: {
+        title: {
+            en: "AI Workflow Automation",
+            tr: "Yapay Zeka İş Akışı Otomasyonu"
+        },
+        content: {
+            en: `
+                <div class="space-y-4">
+                    <p class="text-lg text-gray-700 dark:text-slate-300">Transform complex business processes with AI-powered automation that handles multi-step workflows and intelligent decision-making.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Key Features</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Intelligent Document Processing</li>
+                                <li>• Predictive Analytics</li>
+                                <li>• Natural Language Understanding</li>
+                                <li>• Dynamic Decision Trees</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Use Cases</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Automated Customer Onboarding</li>
+                                <li>• Intelligent Invoice Processing</li>
+                                <li>• Dynamic Inventory Management</li>
+                                <li>• AI-driven Support Escalation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `,
+            tr: `
+                <div class="space-y-4">
+                    <p class="text-lg text-gray-700 dark:text-slate-300">Çok adımlı iş akışlarını ve akıllı karar verme süreçlerini yöneten, yapay zeka destekli otomasyon ile karmaşık iş süreçlerinizi dönüştürün.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Temel Özellikler</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Akıllı Belge İşleme</li>
+                                <li>• Tahmine Dayalı Analitik</li>
+                                <li>• Doğal Dil Anlama</li>
+                                <li>• Dinamik Karar Ağaçları</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Kullanım Senaryoları</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Otomatik Müşteri Onboarding</li>
+                                <li>• Akıllı Fatura İşleme</li>
+                                <li>• Dinamik Envanter Yönetimi</li>
+                                <li>• Yapay Zeka Destekli Destek Yönlendirme</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    },
+    1: {
+        title: {
+            en: "n8n Integration Solutions",
+            tr: "n8n Entegrasyon Çözümleri"
+        },
+        content: {
+            en: `
+                <div class="space-y-4">
+                    <p class="text-lg text-gray-700 dark:text-slate-300">Connect your entire business ecosystem with seamless integration solutions using n8n workflow automation platform.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Integration Capabilities</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• 300+ Pre-built Connectors</li>
+                                <li>• Custom API Integration</li>
+                                <li>• Real-time Data Sync</li>
+                                <li>• Bi-directional Workflows</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Popular Integrations</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Salesforce → Slack → Sheets</li>
+                                <li>• Shopify → QuickBooks → Email</li>
+                                <li>• Zendesk → Notion → Analytics</li>
+                                <li>• MySQL → AWS S3 → Warehouse</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `,
+            tr: `
+                <div class="space-y-4">
+                    <p class="text-lg text-gray-700 dark:text-slate-300">n8n iş akışı otomasyon platformunu kullanarak tüm iş ekosisteminizi sorunsuz entegrasyon çözümleriyle bağlayın.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Entegrasyon Yetenekleri</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• 300+ Hazır Bağlayıcı</li>
+                                <li>• Özel API Entegrasyonu</li>
+                                <li>• Gerçek Zamanlı Veri Senkronizasyonu</li>
+                                <li>• Çift Yönlü İş Akışları</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Popüler Entegrasyonlar</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Salesforce → Slack → E-Tablolar</li>
+                                <li>• Shopify → QuickBooks → E-posta</li>
+                                <li>• Zendesk → Notion → Analitik</li>
+                                <li>• MySQL → AWS S3 → Veri Ambarı</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    },
+    2: {
+        title: {
+            en: "Custom AI Agents",
+            tr: "Özel Yapay Zeka Agentları"
+        },
+        content: {
+            en: `
+                <div class="space-y-4">
+                    <p class="text-lg text-gray-700 dark:text-slate-300">Develop custom AI agents that understand your business context and handle specialized tasks autonomously.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Agent Types</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Customer Service Agents</li>
+                                <li>• Sales Development Agents</li>
+                                <li>• Data Analysis Agents</li>
+                                <li>• Internal Operations Agents</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Key Features</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Context-Aware Conversations</li>
+                                <li>• Multi-modal Capabilities</li>
+                                <li>• Enterprise Security</li>
+                                <li>• Continuous Learning</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `,
+            tr: `
+                <div class="space-y-4">
+                    <p class="text-lg text-gray-700 dark:text-slate-300">İş bağlamınızı anlayan ve özel görevleri otonom olarak yöneten özel yapay zeka agentları geliştirin.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Agent Türleri</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Müşteri Hizmetleri Agentları</li>
+                                <li>• Satış Geliştirme Agentları</li>
+                                <li>• Veri Analizi Agentları</li>
+                                <li>• İç Operasyon Agentları</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Temel Özellikler</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Bağlam Farkında Konuşmalar</li>
+                                <li>• Çok Modlu Yetenekler</li>
+                                <li>• Kurumsal Güvenlik</li>
+                                <li>• Sürekli Öğrenme</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    },
+    3: {
+        title: {
+            en: "Data Intelligence & Reporting",
+            tr: "Veri Zekası & Raporlama"
+        },
+        content: {
+            en: `
+                <div class="space-y-4">
+                    <p class="text-lg text-gray-700 dark:text-slate-300">Automate your entire data pipeline and transform business information into actionable intelligence with real-time dashboards.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Data Solutions</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Automated Data Collection</li>
+                                <li>• Real-time Processing</li>
+                                <li>• AI-Powered Analytics</li>
+                                <li>• Custom Dashboards</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Reporting Capabilities</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Scheduled Reports</li>
+                                <li>• Ad-hoc Analysis</li>
+                                <li>• Predictive Modeling</li>
+                                <li>• Anomaly Detection</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `,
+            tr: `
+                <div class="space-y-4">
+                    <p class="text-lg text-gray-700 dark:text-slate-300">Tüm veri boru hattınızı otomatikleştirin ve iş bilgilerinizi gerçek zamanlı gösterge panelleriyle eyleme dönüştürülebilir zekaya dönüştürün.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Veri Çözümleri</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Otomatik Veri Toplama</li>
+                                <li>• Gerçek Zamanlı İşleme</li>
+                                <li>• Yapay Zeka Destekli Analitik</li>
+                                <li>• Özel Gösterge Panelleri</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-slate-700 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Raporlama Yetenekleri</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                                <li>• Zamanlanmış Raporlar</li>
+                                <li>• Anlık Analiz</li>
+                                <li>• Tahmine Dayalı Modelleme</li>
+                                <li>• Anomali Tespiti</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    }
+};
+
+function showServiceModal(serviceIndex) {
+    const modal = document.getElementById('serviceModal');
+    const title = document.getElementById('modalTitle');
+    const content = document.getElementById('modalContent');
+    
+    // Get current language from HTML tag
+    const currentLang = document.documentElement.lang || 'en';
+    
+    title.textContent = serviceDetails[serviceIndex].title[currentLang];
+    content.innerHTML = serviceDetails[serviceIndex].content[currentLang];
+    
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeServiceModal() {
+    const modal = document.getElementById('serviceModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+document.getElementById('serviceModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeServiceModal();
+    }
+});
+</script>

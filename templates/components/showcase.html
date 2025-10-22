@@ -1,21 +1,689 @@
-<section id="showcase" class="py-24">
+<section id="showcase" class="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-slate-900 dark:to-[#04091E]">
     <div class="container mx-auto px-6 text-center">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">{{ t.showcase.title }}</h2>
         <p class="text-lg gradient-text mb-16 max-w-2xl mx-auto font-semibold">{{ t.showcase.subtitle }}</p>
+        
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {% for demo in t.showcase.demos %}
-            <div class="niotech-card niotech-card-border-glow p-4 rounded-xl text-center flex flex-col">
-                <img src="{{ [
-                    'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2FjNGYwYzAzNGUyNWMwNzk3ZDA2NWExZGU4Y2QyZjQ2ZjkxZWI3ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L1R1tvI9My5vdABhUI/giphy.gif',
-                    'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTRiOGY3ZjQ3NzI4MzU4ZWRmMDM1NmMyZDVmYmIyOWFkYjRjZDQ0OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/JtB5o1hTnMUTjIZBJH/giphy.gif',
-                    'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExODZjY2IxZDU1OGEyYjA4YzQ0MzQ1N2NhOTg2M2I1MDBkYTE3OTZmNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/S3nZFke4WXjKcCVE2z/giphy.gif'
-                ][loop.index0] }}" alt="{{ demo.title }}" class="w-full h-auto object-cover rounded-md mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex-grow">{{ demo.title }}</h3>
-                <button class="bg-transparent border border-[#4640FF] text-[#8A85FF] hover:bg-[#4640FF] hover:text-white dark:hover:text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm mt-auto">
-                    {{ t.showcase.cta }}
-                </button>
+            <div class="showcase-card group relative bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-slate-700 hover:border-[#4640FF] overflow-hidden">
+                <!-- Hover Effect Background -->
+                <div class="absolute inset-0 bg-gradient-to-br from-[#4640FF]/5 to-[#8E45FF]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                
+                <!-- Demo GIF/Image -->
+                <div class="relative mb-6 rounded-xl overflow-hidden bg-gray-100 dark:bg-slate-700 p-4">
+                    <img 
+                        src="{{ [
+                            'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2FjNGYwYzAzNGUyNWMwNzk3ZDA2NWExZGU4Y2QyZjQ2ZjkxZWI3ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L1R1tvI9My5vdABhUI/giphy.gif',
+                            'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTRiOGY3ZjQ3NzI4MzU4ZWRmMDM1NmMyZDVmYmIyOWFkYjRjZDQ0OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/JtB5o1hTnMUTjIZBJH/giphy.gif',
+                            'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExODZjY2IxZDU1OGEyYjA4YzQ0MzQ1N2NhOTg2M2I1MDBkYTE3OTZmNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/S3nZFke4WXjKcCVE2z/giphy.gif'
+                        ][loop.index0] }}" 
+                        alt="{{ demo.title }}" 
+                        class="w-full h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                    >
+                    <!-- Play Overlay -->
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                        <div class="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                            <svg class="w-8 h-8 text-[#4640FF]" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <h3 class="relative text-xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-[#4640FF] dark:group-hover:text-white transition-colors duration-300">
+                    {{ demo.title }}
+                </h3>
+
+                <!-- Description (Hover'da görünecek) -->
+                <div class="relative features-list opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 mb-4">
+                    <div class="space-y-2 text-left">
+                        {% if loop.index0 == 0 %}
+                        <!-- AI Email Reply Bot Features -->
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Smart Email Classification' if current_lang == 'en' else 'Akıllı E-posta Sınıflandırma' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Context-Aware Responses' if current_lang == 'en' else 'Bağlam Farkında Yanıtlar' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ '24/7 Automated Support' if current_lang == 'en' else '7/24 Otomatik Destek' }}</span>
+                        </div>
+                        {% elif loop.index0 == 1 %}
+                        <!-- Automated Report Generator Features -->
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Multi-Source Data Integration' if current_lang == 'en' else 'Çok Kaynaklı Veri Entegrasyonu' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Real-time Analytics' if current_lang == 'en' else 'Gerçek Zamanlı Analitik' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Custom Dashboard Creation' if current_lang == 'en' else 'Özel Pano Oluşturma' }}</span>
+                        </div>
+                        {% elif loop.index0 == 2 %}
+                        <!-- CRM Data Sync Features -->
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Bi-directional Sync' if current_lang == 'en' else 'Çift Yönlü Senkronizasyon' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Conflict Resolution' if current_lang == 'en' else 'Çakışma Çözümleme' }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-slate-500">
+                            <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>{{ 'Real-time Updates' if current_lang == 'en' else 'Gerçek Zamanlı Güncellemeler' }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- CTA Button -->
+                <div class="relative mt-auto pt-4 border-t border-gray-100 dark:border-slate-700">
+                    <button onclick="showDemoModal({{ loop.index0 }})" class="w-full bg-transparent border border-[#4640FF] text-[#8A85FF] hover:bg-[#4640FF] hover:text-white dark:hover:text-white font-semibold group transition-all duration-300 flex items-center justify-center py-3 px-6 rounded-lg">
+                        {{ t.showcase.cta }}
+                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             {% endfor %}
         </div>
     </div>
 </section>
+
+<!-- Demo Modal -->
+<div id="demoModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="demoModalTitle" class="text-2xl font-bold text-gray-900 dark:text-white"></h3>
+                <button onclick="closeDemoModal()" class="text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mb-6 rounded-xl overflow-hidden bg-gray-100 dark:bg-slate-700 p-4">
+                <img id="demoModalImage" src="" alt="" class="w-full h-64 object-cover rounded-lg" loading="eager">
+            </div>
+            
+            <div id="demoModalContent" class="prose dark:prose-invert max-w-none">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+            
+            <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="closeDemoModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                    {{ 'Close' if current_lang == 'en' else 'Kapat' }}
+                </button>
+                <button onclick="requestLiveDemo()" class="px-6 py-3 bg-gradient-to-r from-[#4640FF] to-[#8E45FF] text-white rounded-lg hover:shadow-lg transition-all">
+                    {{ 'Request Live Demo' if current_lang == 'en' else 'Canlı Demo Talep Et' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.showcase-card {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.features-list {
+    flex-grow: 1;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #4640FF 0%, #8E45FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.niotech-card-border-glow {
+    position: relative;
+}
+
+.niotech-card-border-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    padding: 2px;
+    background: linear-gradient(135deg, #4640FF, #8E45FF, #4640FF);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask-composite: xor;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.niotech-card-border-glow:hover::before {
+    opacity: 1;
+}
+</style>
+
+<script>
+// Demo details for modal - Multi-language support - TAMAMLANDI
+const demoDetails = {
+    0: {
+        title: {
+            en: "AI Email Reply Bot",
+            tr: "Yapay Zeka E-posta Yanıtlama Botu"
+        },
+        image: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2FjNGYwYzAzNGUyNWMwNzk3ZDA2NWExZGU4Y2QyZjQ2ZjkxZWI3ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L1R1tvI9My5vdABhUI/giphy.gif",
+        content: {
+            en: `
+                <div class="space-y-6">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h4 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">🚀 Smart Email Automation</h4>
+                        <p class="text-blue-700 dark:text-blue-300 text-sm">Our AI-powered email bot automatically classifies incoming emails and generates context-aware responses, reducing response time by 85%.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Key Features</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Intelligent email classification
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Context-aware responses
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    24/7 automated support
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Multi-language support
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Business Impact</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    85% faster response time
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    24/7 customer support
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Reduced operational costs
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Improved customer satisfaction
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `,
+            tr: `
+                <div class="space-y-6">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h4 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">🚀 Akıllı E-posta Otomasyonu</h4>
+                        <p class="text-blue-700 dark:text-blue-300 text-sm">Yapay zeka destekli e-posta botumuz, gelen e-postaları otomatik olarak sınıflandırır ve bağlam farkında yanıtlar oluşturur, yanıt süresini %85 oranında azaltır.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Temel Özellikler</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Akıllı e-posta sınıflandırma
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Bağlam farkında yanıtlar
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    7/24 otomatik destek
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Çok dilli destek
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">İş Etkisi</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    %85 daha hızlı yanıt süresi
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    7/24 müşteri desteği
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Azaltılmış operasyonel maliyetler
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Gelişmiş müşteri memnuniyeti
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    },
+    1: {
+        title: {
+            en: "Automated Report Generator",
+            tr: "Otomatik Rapor Oluşturucu"
+        },
+        image: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTRiOGY3ZjQ3NzI4MzU4ZWRmMDM1NmMyZDVmYmIyOWFkYjRjZDQ0OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/JtB5o1hTnMUTjIZBJH/giphy.gif",
+        content: {
+            en: `
+                <div class="space-y-6">
+                    <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                        <h4 class="font-semibold text-purple-900 dark:text-purple-100 mb-2">📊 Intelligent Reporting</h4>
+                        <p class="text-purple-700 dark:text-purple-300 text-sm">Transform raw data into actionable insights with our AI-powered reporting system that automatically generates comprehensive business reports.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Key Features</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Multi-source data integration
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Real-time analytics
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Custom dashboard creation
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Predictive insights
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Business Impact</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    90% faster report generation
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Data-driven decision making
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Reduced manual work
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Improved accuracy
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `,
+            tr: `
+                <div class="space-y-6">
+                    <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                        <h4 class="font-semibold text-purple-900 dark:text-purple-100 mb-2">📊 Akıllı Raporlama</h4>
+                        <p class="text-purple-700 dark:text-purple-300 text-sm">Ham verileri eyleme dönüştürülebilir içgörülere dönüştürün. Yapay zeka destekli raporlama sistemimiz otomatik olarak kapsamlı iş raporları oluşturur.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Temel Özellikler</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Çok kaynaklı veri entegrasyonu
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Gerçek zamanlı analitik
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Özel pano oluşturma
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Tahmine dayalı içgörüler
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">İş Etkisi</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    %90 daha hızlı rapor oluşturma
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Veri odaklı karar verme
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Azaltılmış manuel iş
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Gelişmiş doğruluk
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    },
+    2: {
+        title: {
+            en: "CRM Data Sync",
+            tr: "CRM Veri Senkronizasyonu"
+        },
+        image: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExODZjY2IxZDU1OGEyYjA4YzQ0MzQ1N2NhOTg2M2I1MDBkYTE3OTZmNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/S3nZFke4WXjKcCVE2z/giphy.gif",
+        content: {
+            en: `
+                <div class="space-y-6">
+                    <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                        <h4 class="font-semibold text-green-900 dark:text-green-100 mb-2">🔄 Seamless Data Integration</h4>
+                        <p class="text-green-700 dark:text-green-300 text-sm">Keep all your business systems in perfect sync with our intelligent data synchronization platform that ensures data consistency across all platforms.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Key Features</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Bi-directional sync
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Conflict resolution
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Real-time updates
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Multi-platform support
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Business Impact</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    99.9% data accuracy
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    No manual data entry
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Improved team collaboration
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Enhanced data security
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `,
+            tr: `
+                <div class="space-y-6">
+                    <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                        <h4 class="font-semibold text-green-900 dark:text-green-100 mb-2">🔄 Sorunsuz Veri Entegrasyonu</h4>
+                        <p class="text-green-700 dark:text-green-300 text-sm">Tüm iş sistemlerinizi mükemmel senkronizasyonda tutun. Akıllı veri senkronizasyon platformumuz tüm platformlarda veri tutarlılığını sağlar.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Temel Özellikler</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Çift yönlü senkronizasyon
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Çakışma çözümleme
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Gerçek zamanlı güncellemeler
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Çok platform desteği
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">İş Etkisi</h4>
+                            <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-2">
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    %99.9 veri doğruluğu
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Manuel veri girişi yok
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Gelişmiş takım işbirliği
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Gelişmiş veri güvenliği
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    }
+};
+
+function showDemoModal(demoIndex) {
+    const modal = document.getElementById('demoModal');
+    const title = document.getElementById('demoModalTitle');
+    const image = document.getElementById('demoModalImage');
+    const content = document.getElementById('demoModalContent');
+    
+    // Get current language from HTML tag
+    const currentLang = document.documentElement.lang || 'en';
+    
+    // Check if demo exists
+    if (demoDetails[demoIndex]) {
+        title.textContent = demoDetails[demoIndex].title[currentLang];
+        image.src = demoDetails[demoIndex].image;
+        image.alt = demoDetails[demoIndex].title[currentLang];
+        content.innerHTML = demoDetails[demoIndex].content[currentLang];
+        
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    } else {
+        console.error('Demo not found:', demoIndex);
+    }
+}
+
+function closeDemoModal() {
+    const modal = document.getElementById('demoModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function requestLiveDemo() {
+    // Scroll to contact section
+    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+    closeDemoModal();
+}
+
+// Close modal when clicking outside
+document.getElementById('demoModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDemoModal();
+    }
+});
+</script>
