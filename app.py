@@ -698,6 +698,108 @@ def admin_toggle_post(post_id):
     conn.close()
     return redirect(url_for('admin_dashboard'))
 
+
+#Ai blog page
+
+# AI Blog Generation Routes
+@app.route('/admin/generate-blog', methods=['POST'])
+@admin_required
+def generate_blog_post():
+    """Generate blog content using AI - DEBUG VERSION"""
+    try:
+        print("🔍 AI generation endpoint called")
+        
+        data = request.get_json()
+        print(f"📥 Received data: {data}")
+        
+        topic = data.get('topic', '')
+        language = data.get('language', 'en')
+        
+        if not topic:
+            return jsonify({'error': 'Topic is required'}), 400
+        
+        print(f"🤖 Sending to n8n - Topic: {topic}, Language: {language}")
+        
+        # n8n'den yanıt al
+        ai_response = generate_blog_with_ai(topic, language)
+        
+        print(f"📊 AI response type: {type(ai_response)}")
+        print(f"📊 AI response keys: {ai_response.keys() if ai_response else 'None'}")
+        
+        if ai_response:
+            print(f"✅ AI response received - Success: {ai_response.get('success')}")
+            print(f"✅ AI response received - Content length: {len(ai_response.get('content', ''))}")
+            print(f"✅ AI response received - Title: {ai_response.get('title')}")
+            
+            # Daha esnek kontrol
+            if (ai_response.get('success') is not False and 
+                ai_response.get('content') and 
+                len(ai_response.get('content', '')) > 50):
+                print(f"🎉 Valid AI content - returning to frontend")
+                return jsonify(ai_response)
+        
+        print(f"❌ No valid AI response received")
+        return jsonify({'error': 'AI service is currently unavailable. Please try again.'}), 503
+        
+    except Exception as e:
+        print(f"❌ AI generation error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'AI generation failed'}), 500
+
+def generate_blog_with_ai(topic, language='en'):
+    """Generate blog content using n8n workflow - FIXED VERSION"""
+    try:
+        n8n_webhook_url = "https://g30rnaqf.rpcld.co/webhook/8ab73ba1-e074-4a2d-8076-91adaa0c776a"
+        
+        payload = {
+            'topic': topic,
+            'language': language,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        print(f"📡 Sending request to n8n...")
+        
+        response = requests.post(
+            n8n_webhook_url,
+            json=payload,
+            headers={'Content-Type': 'application/json'},
+            timeout=45
+        )
+        
+        print(f"📡 n8n response status: {response.status_code}")
+        print(f"📡 n8n response content: {response.text}")  # DEBUG için ekledim
+        
+        if response.status_code == 200:
+            result = response.json()
+            print(f"🎯 n8n response type: {type(result)}")
+            print(f"🎯 n8n response keys: {result.keys() if isinstance(result, dict) else 'Not a dict'}")
+            
+            # DEBUG: Tüm response'u yazdır
+            print(f"🎯 Full n8n response: {result}")
+            
+            # EĞER result DICT ise direkt kullan, LIST ise ilk elemanı al
+            if isinstance(result, dict):
+                print(f"✅ Direct object response")
+                return result
+            elif isinstance(result, list) and len(result) > 0:
+                print(f"✅ Array response, taking first item")
+                return result[0]
+            else:
+                print(f"❌ Invalid response format: {type(result)}")
+                return None
+            
+        else:
+            print(f"❌ n8n HTTP error: {response.status_code}")
+            print(f"❌ n8n error response: {response.text}")
+            return None
+            
+    except Exception as e:
+        print(f"❌ n8n service error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
 if __name__ == '__main__':
     import jinja2
     jinja2.clear_caches()

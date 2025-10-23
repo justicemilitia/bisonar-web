@@ -13,7 +13,37 @@
             </p>
         </div>
 
-        <!-- Form -->
+        <!-- AI Generation Section - SADECE YENİ POST İÇİN GÖSTER -->
+        {% if not post %}
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                🚀 AI ile Blog Yazısı Oluştur
+            </h3>
+            <p class="text-blue-700 dark:text-blue-300 mb-4">
+                Konuyu girerek AI destekli blog yazısı oluşturabilirsiniz.
+            </p>
+            
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="ai-topic" 
+                       placeholder="Örn: n8n workflow optimization, ChatGPT entegrasyonu..."
+                       class="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                
+                <select id="ai-language" class="px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                    <option value="en">English</option>
+                    <option value="tr" selected>Türkçe</option>
+                </select>
+                
+                <button onclick="generateWithAI()" 
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold transition-colors flex items-center gap-2">
+                    <span id="ai-loading" class="hidden">⏳</span>
+                    AI ile Oluştur
+                </button>
+            </div>
+            <div id="ai-error" class="text-red-600 dark:text-red-400 mt-2 hidden"></div>
+        </div>
+        {% endif %}
+
+        <!-- Form - DEĞİŞMEDİ -->
         <form method="POST" enctype="multipart/form-data" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
             <!-- Title -->
             <div>
@@ -119,7 +149,7 @@
 </div>
 
 <script>
-// Auto-generate slug from title
+// Auto-generate slug from title - DEĞİŞMEDİ
 document.getElementById('title').addEventListener('input', function() {
     const slugInput = document.getElementById('slug');
     if (!slugInput.value) {
@@ -131,5 +161,92 @@ document.getElementById('title').addEventListener('input', function() {
         slugInput.value = slug;
     }
 });
+
+// AI Generation Function - BASİT VE ÇALIŞAN VERSİYON
+async function generateWithAI() {
+    const topicInput = document.getElementById('ai-topic');
+    const languageSelect = document.getElementById('ai-language');
+    const loadingElement = document.getElementById('ai-loading');
+    const errorElement = document.getElementById('ai-error');
+    
+    const topic = topicInput.value.trim();
+    const language = languageSelect.value;
+    
+    if (!topic) {
+        errorElement.textContent = 'Lütfen bir konu girin';
+        errorElement.classList.remove('hidden');
+        return;
+    }
+    
+    loadingElement.classList.remove('hidden');
+    errorElement.classList.add('hidden');
+    
+    try {
+        console.log('🔄 Sending AI request...', { topic, language });
+        
+        const response = await fetch('/admin/generate-blog', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                topic: topic,
+                language: language
+            })
+        });
+        
+        console.log('📥 Response status:', response.status);
+        console.log('📥 Response ok:', response.ok);
+        
+        const data = await response.json();
+        console.log('📥 Full response data:', data);
+        
+        if (response.ok) {
+            if (data.error) {
+                console.log('❌ Backend error:', data.error);
+                throw new Error(data.error);
+            } else {
+                console.log('✅ AI data received:', {
+                    title: data.title,
+                    content_length: data.content?.length,
+                    success: data.success
+                });
+                
+                // Fill form with AI generated content
+                document.getElementById('title').value = data.title || '';
+                document.getElementById('slug').value = data.slug || data.title
+                    .toLowerCase()
+                    .replace(/[^a-z0-9 -]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-');
+                document.getElementById('excerpt').value = data.excerpt || '';
+                document.getElementById('content').value = data.content || '';
+                document.getElementById('read_time').value = data.read_time || '5 min read';
+                document.getElementById('author').value = data.author || 'Bisonar AI';
+                
+                // Show success message
+                errorElement.textContent = '✅ AI içeriği başarıyla oluşturuldu!';
+                errorElement.classList.remove('hidden');
+                errorElement.classList.remove('text-red-600');
+                errorElement.classList.add('text-green-600');
+                
+                console.log('🎉 Form filled successfully');
+            }
+            
+        } else {
+            console.log('❌ HTTP error:', data);
+            throw new Error(data.error || `HTTP ${response.status} - AI servisi şu anda müsait değil`);
+        }
+        
+    } catch (error) {
+        console.error('❌ AI generation error:', error);
+        errorElement.textContent = 'Hata: ' + error.message;
+        errorElement.classList.remove('hidden');
+        errorElement.classList.remove('text-green-600');
+        errorElement.classList.add('text-red-600');
+    } finally {
+        loadingElement.classList.add('hidden');
+    }
+}
 </script>
 {% endblock %}
