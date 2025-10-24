@@ -517,7 +517,26 @@ def sitemap():
         ''').fetchall()
         conn.close()
         
-        # SPA sections - TÜM önemli sayfalarınız
+        # Blog postlarını formatla - SAAT BİLGİSİNİ KALDIR
+        formatted_posts = []
+        for post in blog_posts:
+            post_dict = dict(post)
+            lastmod = post['updated_at'] or post['created_at']
+            
+            # Tarihi formatla - sadece YYYY-AA-GG
+            if lastmod:
+                if isinstance(lastmod, str):
+                    # "2025-10-23 23:11:04" -> "2025-10-23"
+                    post_dict['lastmod'] = lastmod.split(' ')[0]
+                else:
+                    # datetime objesiyse
+                    post_dict['lastmod'] = lastmod.strftime('%Y-%m-%d')
+            else:
+                post_dict['lastmod'] = datetime.now().strftime('%Y-%m-%d')
+                
+            formatted_posts.append(post_dict)
+        
+        # SPA sections
         spa_sections = [
             {'loc': '', 'priority': '1.0', 'changefreq': 'weekly'},
             {'loc': '#about', 'priority': '0.8', 'changefreq': 'monthly'},
@@ -529,8 +548,8 @@ def sitemap():
             'sitemap.xml', 
             base_url=base_url,
             spa_sections=spa_sections,
-            blog_posts=blog_posts,
-            lastmod=datetime.now().strftime('%Y-%m-%d')  # Sadece tarih
+            blog_posts=formatted_posts,  # ← FORMATLANMIŞ postlar
+            lastmod=datetime.now().strftime('%Y-%m-%d')
         )
         
         return Response(response, mimetype='application/xml')
