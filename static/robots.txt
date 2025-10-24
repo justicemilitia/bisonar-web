@@ -1,26 +1,14 @@
 User-agent: *
 Allow: /
-Allow: /blog
-Allow: /blog/*
-Allow: /static/
-Allow: /css/
-Allow: /js/
-Allow: /images/
-
 Disallow: /admin/
 Disallow: /private/
 Disallow: /dashboard
 Disallow: /api/admin/
 
 Sitemap: https://www.bisonar.com/sitemap.xml
-Sitemap: https://www.bisonar.com/sitemap-blog.xml
-
-Crawl-delay: 1
 
 User-agent: ChatGPT
 User-agent: GPTBot  
 User-agent: Claude-Web
-Allow: /
-
 User-agent: CCBot
-Disallow: /
+Allow: /
