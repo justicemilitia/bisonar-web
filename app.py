@@ -528,9 +528,9 @@ def sitemap():
         response = render_template(
             'sitemap.xml', 
             base_url=base_url,
-            spa_sections=spa_sections,  # ← BU EKLENDİ
-            blog_posts=blog_posts,      # ← BU ZATEN VAR
-            lastmod=datetime.now().strftime('%Y-%m-%d')
+            spa_sections=spa_sections,
+            blog_posts=blog_posts,
+            lastmod=datetime.now().strftime('%Y-%m-%d')  # Sadece tarih
         )
         
         return Response(response, mimetype='application/xml')
