@@ -1,0 +1,259 @@
+{% extends "customer/base.html" %}
+
+{% block page_title %}Fiyat Listesi{% endblock %}
+{% block page_subtitle %}Ürün ve hizmet fiyatlarınızı yönetin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Pricing Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Fiyat Listesi</h3>
+            <button onclick="openAddPriceModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                <i class="fas fa-plus mr-2"></i>Yeni Fiyat Ekle
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">Ürün/Hizmet</th>
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">Açıklama</th>
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">Fiyat</th>
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">Kategori</th>
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">Durum</th>
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="pricingTableBody">
+                    <!-- Dynamic content will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- AI Pricing Behavior -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">AI Fiyat Davranışı</h3>
+        <div class="space-y-4">
+            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div>
+                    <p class="font-medium text-gray-900">Otomatik Fiyat Önerisi</p>
+                    <p class="text-sm text-gray-600">AI, müşteriye uygun fiyatları otomatik önerir</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="autoPricing" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+
+            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div>
+                    <p class="font-medium text-gray-900">İndirim Önerileri</p>
+                    <p class="text-sm text-gray-600">Potansiyel müşterilere otomatik indirim teklifi</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="autoDiscount" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Price Modal -->
+<div id="addPriceModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Yeni Fiyat Ekle</h3>
+        
+        <form id="addPriceForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Ürün/Hizmet Adı *</label>
+                <input type="text" name="product_name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
+                <textarea name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ürün/hizmet detayları..."></textarea>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fiyat (₺) *</label>
+                    <input type="number" name="price" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="0.00">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kategori *</label>
+                    <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="product">Ürün</option>
+                        <option value="service">Hizmet</option>
+                        <option value="consulting">Danışmanlık</option>
+                        <option value="subscription">Abonelik</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" name="is_active" id="is_active" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="is_active" class="ml-2 block text-sm text-gray-700">Aktif</label>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" onclick="closeAddPriceModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    İptal
+                </button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Load pricing data
+    function loadPricingData() {
+        fetch('/api/customer/pricing')
+            .then(response => {
+                if (!response.ok) throw new Error('API error');
+                return response.json();
+            })
+            .then(data => {
+                const tableBody = document.getElementById('pricingTableBody');
+                if (!tableBody) return;
+                
+                tableBody.innerHTML = '';
+                
+                if (data.prices && data.prices.length > 0) {
+                    data.prices.forEach(price => {
+                        const row = document.createElement('tr');
+                        row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="py-3 px-4 font-medium text-gray-900">${price.product_name}</td>
+                            <td class="py-3 px-4 text-gray-600">${price.description || '-'}</td>
+                            <td class="py-3 px-4 font-medium text-gray-900">${parseFloat(price.price).toFixed(2)} ₺</td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                    price.category === 'product' ? 'bg-blue-100 text-blue-800' :
+                                    price.category === 'service' ? 'bg-green-100 text-green-800' :
+                                    price.category === 'consulting' ? 'bg-purple-100 text-purple-800' :
+                                    'bg-orange-100 text-orange-800'
+                                }">
+                                    ${price.category}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                    price.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }">
+                                    ${price.is_active ? 'Aktif' : 'Pasif'}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <button onclick="editPrice('${price.id}')" class="text-blue-600 hover:text-blue-800 mr-3">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deletePrice('${price.id}')" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="py-8 text-center text-gray-500">
+                                <i class="fas fa-inbox text-4xl mb-2"></i>
+                                <p>Henüz fiyat bilgisi eklenmemiş</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Fiyat verisi yüklenirken hata:', error);
+                showNotification('Fiyat verileri yüklenirken hata oluştu', 'error');
+            });
+    }
+
+    // Modal functions
+    function openAddPriceModal() {
+        document.getElementById('addPriceModal').classList.remove('hidden');
+    }
+
+    function closeAddPriceModal() {
+        document.getElementById('addPriceModal').classList.add('hidden');
+        document.getElementById('addPriceForm').reset();
+    }
+
+    // Form submission
+    document.getElementById('addPriceForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        data.is_active = data.is_active === 'on';
+        
+        fetch('/api/customer/pricing', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                closeAddPriceModal();
+                loadPricingData();
+                showNotification('Fiyat başarıyla eklendi!', 'success');
+            } else {
+                showNotification('Hata: ' + (result.error || 'Bilinmeyen hata'), 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('İstek sırasında hata oluştu', 'error');
+            console.error('Error:', error);
+        });
+    });
+
+    // Placeholder functions for edit/delete
+    function editPrice(priceId) {
+        showNotification('Düzenleme özelliği yakında eklenecek', 'info');
+    }
+
+    function deletePrice(priceId) {
+        if (confirm('Bu fiyatı silmek istediğinizden emin misiniz?')) {
+            fetch(`/api/customer/pricing/${priceId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    loadPricingData();
+                    showNotification('Fiyat başarıyla silindi!', 'success');
+                } else {
+                    showNotification('Hata: ' + result.error, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Silme sırasında hata oluştu', 'error');
+            });
+        }
+    }
+
+    // Load data on page load
+    document.addEventListener('DOMContentLoaded', loadPricingData);
+
+    // Close modal on outside click
+    document.getElementById('addPriceModal').addEventListener('click', function(e) {
+        if (e.target.id === 'addPriceModal') {
+            closeAddPriceModal();
+        }
+    });
+</script>
+{% endblock %}

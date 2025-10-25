@@ -1,0 +1,142 @@
+{% extends "customer/base.html" %}
+
+{% block page_title %}AI Ayarları{% endblock %}
+{% block page_subtitle %}Chatbot'unuzun davranışını özelleştirin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- AI Prompt Configuration -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">AI Asistan Özelleştirme</h3>
+        
+        <form id="aiSettingsForm" class="space-y-6">
+            <!-- Business Info -->
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Şirket Adı</label>
+                    <input type="text" name="business_name" value="{{ customer.business_name or customer.name }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">İş Türü</label>
+                    <select name="business_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="teknoloji" {% if customer.business_type == 'teknoloji' %}selected{% endif %}>Teknoloji</option>
+                        <option value="danismanlik" {% if customer.business_type == 'danismanlik' %}selected{% endif %}>Danışmanlık</option>
+                        <option value="saglik" {% if customer.business_type == 'saglik' %}selected{% endif %}>Sağlık</option>
+                        <option value="egitim" {% if customer.business_type == 'egitim' %}selected{% endif %}>Eğitim</option>
+                        <option value="ticaret" {% if customer.business_type == 'ticaret' %}selected{% endif %}>E-ticaret</option>
+                        <option value="diger" {% if customer.business_type == 'diger' or not customer.business_type %}selected{% endif %}>Diğer</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Services -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Hizmetler (virgülle ayırın)</label>
+                <input type="text" name="services" 
+                       value="{{ customer.services | join(', ') if customer.services else 'n8n otomasyon, AI iş akışları, teknik danışmanlık' }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="n8n otomasyon, AI iş akışları, teknik danışmanlık">
+            </div>
+
+            <!-- Custom Prompt -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Özel AI Prompt</label>
+                <textarea name="custom_prompt" rows="6"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="AI asistanınızın nasıl davranmasını istiyorsunuz?">{{ customer.custom_prompt or 'Sen bir AI asistanısın. Profesyonel ve yardımsever ol. Müşteri iletişim bilgilerini toplamaya özen göster.' }}</textarea>
+                <p class="text-sm text-gray-500 mt-1">
+                    AI asistanınızın kişiliğini, dil stilini ve davranışlarını özelleştirin.
+                </p>
+            </div>
+
+            <!-- Welcome Message -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Hoş Geldin Mesajı</label>
+                <textarea name="welcome_message" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Müşteri ilk mesaj attığında gösterilecek mesaj">{{ customer.welcome_message or 'Merhaba! Size nasıl yardımcı olabilirim?' }}</textarea>
+            </div>
+
+            <!-- AI Model Settings -->
+            <div class="border-t pt-6">
+                <h4 class="text-lg font-medium text-gray-900 mb-4">AI Model Ayarları</h4>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">AI Model</label>
+                        <select name="ai_model" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="gpt-3.5-turbo" {% if customer.ai_model == 'gpt-3.5-turbo' %}selected{% endif %}>GPT-3.5 Turbo (Hızlı)</option>
+                            <option value="gpt-4" {% if customer.ai_model == 'gpt-4' %}selected{% endif %}>GPT-4 (Gelişmiş)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sıcaklık (Temperature)</label>
+                        <input type="number" name="temperature" min="0" max="1" step="0.1" 
+                               value="{{ customer.temperature or 0.7 }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-sm text-gray-500 mt-1">0: Tutarlı, 1: Yaratıcı</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Settings -->
+            <div class="flex items-center">
+                <input type="checkbox" name="contact_required" id="contact_required" 
+                       {% if customer.contact_required != false %}checked{% endif %}
+                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="contact_required" class="ml-2 block text-sm text-gray-700">
+                    Müşteri iletişim bilgilerini topla (telefon/email)
+                </label>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                    <i class="fas fa-save mr-2"></i>
+                    Ayarları Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('aiSettingsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = {
+            business_name: formData.get('business_name'),
+            business_type: formData.get('business_type'),
+            services: formData.get('services'),
+            custom_prompt: formData.get('custom_prompt'),
+            welcome_message: formData.get('welcome_message'),
+            ai_model: formData.get('ai_model'),
+            temperature: parseFloat(formData.get('temperature')),
+            contact_required: document.getElementById('contact_required').checked
+        };
+
+        fetch('/api/customer/update-prompt', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showNotification('AI ayarları kaydedildi!', 'success');
+            } else {
+                showNotification('Kayıt sırasında hata: ' + result.error, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('İstek sırasında hata oluştu', 'error');
+            console.error('Error:', error);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,332 @@
+{% extends "customer/base.html" %}
+
+{% block page_title %}Entegrasyonlar{% endblock %}
+{% block page_subtitle %}Üçüncü parti servislerle entegrasyonları yönetin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Telegram Integration -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fab fa-telegram text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Telegram Bildirimleri</h3>
+                    <p class="text-sm text-gray-600">Yeni lead'ler için anlık Telegram bildirimleri</p>
+                </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="telegramToggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <form id="telegramForm" method="POST" action="{{ url_for('save_telegram_settings') }}">
+            <div id="telegramSettings" class="space-y-4 mt-4 hidden">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="telegram_chat_id" class="block text-sm font-medium text-gray-700 mb-1">Telegram Chat ID</label>
+                        <input type="text" id="telegram_chat_id" name="telegram_chat_id" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                               placeholder="123456789">
+                    </div>
+                    <div>
+                        <label for="min_lead_score" class="block text-sm font-medium text-gray-700 mb-1">Minimum Lead Skoru</label>
+                        <input type="number" id="min_lead_score" name="min_lead_score" 
+                               value="50" min="0" max="100" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Bildirim Türleri</label>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="notification_types" value="new_lead" checked
+                                   class="text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Yeni Lead</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="notification_types" value="high_score_lead" checked
+                                   class="text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Yüksek Skorlu Lead</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="notification_types" value="contact_info" checked
+                                   class="text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">İletişim Bilgisi</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-700">
+                        <strong>Kurulum:</strong> Telegram'da @BotFather'dan bot oluşturun ve buraya Chat ID'nizi girin.
+                    </p>
+                </div>
+
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                    <i class="fas fa-save mr-2"></i>Telegram Ayarlarını Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Google Calendar Integration -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                    <i class="fab fa-google text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Google Calendar</h3>
+                    <p class="text-sm text-gray-600">Otomatik takip görüşmeleri ve etkinlikler</p>
+                </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="calendarToggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <form id="calendarForm" method="POST" action="{{ url_for('save_calendar_settings') }}">
+            <div id="calendarSettings" class="space-y-4 mt-4 hidden">
+                <div class="flex items-center space-x-4">
+                    {% if customer.calendar_connected %}
+                    <div class="flex items-center text-green-600">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <span>Google Calendar bağlı</span>
+                    </div>
+                    <a href="{{ url_for('google_calendar_disconnect') }}" class="text-red-600 hover:text-red-800 text-sm">
+                        Bağlantıyı Kes
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('google_calendar_connect') }}" 
+                       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                        <i class="fab fa-google mr-2"></i>
+                        Google ile Bağlan
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="default_event_duration" class="block text-sm font-medium text-gray-700 mb-1">Varsayılan Etkinlik Süresi</label>
+                        <select id="default_event_duration" name="default_event_duration" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="30">30 dakika</option>
+                            <option value="45">45 dakika</option>
+                            <option value="60">60 dakika</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="working_hours" class="block text-sm font-medium text-gray-700 mb-1">Çalışma Saatleri</label>
+                        <select id="working_hours" name="working_hours" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="9-18">09:00 - 18:00</option>
+                            <option value="8-17">08:00 - 17:00</option>
+                            <option value="10-19">10:00 - 19:00</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Otomatik Etkinlik Türleri</label>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="event_types" value="high_value_leads" checked
+                                   class="text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Yüksek Değerli Lead'ler</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="event_types" value="scheduled_calls"
+                                   class="text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Planlanan Görüşmeler</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Calendar Ayarlarını Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Webhook Integration -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-code text-purple-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Webhook Entegrasyonu</h3>
+                    <p class="text-sm text-gray-600">Özel sistemlerinizle entegrasyon</p>
+                </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="webhookToggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+
+        <form id="webhookForm" method="POST" action="{{ url_for('save_webhook_settings') }}">
+            <div id="webhookSettings" class="space-y-4 mt-4 hidden">
+                <div>
+                    <label for="webhook_url" class="block text-sm font-medium text-gray-700 mb-1">Webhook URL</label>
+                    <input type="url" id="webhook_url" name="webhook_url" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                           placeholder="https://api.sizin-siteniz.com/webhook">
+                </div>
+
+                <div>
+                    <label for="webhook_secret" class="block text-sm font-medium text-gray-700 mb-1">Webhook Secret</label>
+                    <div class="flex rounded-md shadow-sm">
+                        <input type="password" id="webhook_secret" name="webhook_secret" 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-900">
+                        <button type="button" onclick="copyToClipboard(document.getElementById('webhook_secret').value)" 
+                                class="px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50">
+                            Kopyala
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Webhook Etkinlikleri</label>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="webhook_events" value="new_conversation" checked
+                                   class="text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Yeni Konuşma</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="webhook_events" value="high_score_lead" checked
+                                   class="text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">Yüksek Skorlu Lead</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="webhook_events" value="contact_info"
+                                   class="text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <span class="ml-2 text-sm text-gray-700">İletişim Bilgisi</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Webhook Ayarlarını Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle integration settings
+    document.getElementById('telegramToggle').addEventListener('change', function() {
+        document.getElementById('telegramSettings').classList.toggle('hidden', !this.checked);
+        updateIntegrationStatus('telegram', this.checked);
+    });
+
+    document.getElementById('calendarToggle').addEventListener('change', function() {
+        document.getElementById('calendarSettings').classList.toggle('hidden', !this.checked);
+        updateIntegrationStatus('calendar', this.checked);
+    });
+
+    document.getElementById('webhookToggle').addEventListener('change', function() {
+        document.getElementById('webhookSettings').classList.toggle('hidden', !this.checked);
+        updateIntegrationStatus('webhook', this.checked);
+    });
+
+    // Integration status güncelleme
+    function updateIntegrationStatus(integration, enabled) {
+        fetch('/api/integrations/' + integration + '/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ enabled: enabled })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                document.getElementById(integration + 'Toggle').checked = !enabled;
+                alert('İşlem başarısız: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById(integration + 'Toggle').checked = !enabled;
+        });
+    }
+
+    // Copy to clipboard function
+    function copyToClipboard(text) {
+        if (!text) {
+            alert('Kopyalanacak metin yok!');
+            return;
+        }
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Kopyalandı!');
+        }, function(err) {
+            console.error('Kopyalama hatası: ', err);
+        });
+    }
+
+    // Form submission handling
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('telegramForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitForm(this);
+        });
+
+        document.getElementById('calendarForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitForm(this);
+        });
+
+        document.getElementById('webhookForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitForm(this);
+        });
+    });
+
+    function submitForm(form) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Kaydediliyor...';
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Kaydedildi!';
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 2000);
+            } else {
+                alert('Kayıt başarısız: ' + data.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Bir hata oluştu');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    }
+</script>
+{% endblock %}

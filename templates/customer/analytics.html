@@ -1,0 +1,280 @@
+{% extends "customer/base.html" %}
+
+{% block page_title %}Analitik{% endblock %}
+{% block page_subtitle %}Chatbot performansınızı detaylı analiz edin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Toplam Konuşma</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2" id="totalConversations">0</p>
+                </div>
+                <div class="p-3 bg-blue-50 rounded-lg">
+                    <i class="fas fa-comments text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Lead Oranı</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2" id="leadRate">0%</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg">
+                    <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Ort. Yanıt Süresi</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2" id="avgResponseTime">0s</p>
+                </div>
+                <div class="p-3 bg-purple-50 rounded-lg">
+                    <i class="fas fa-clock text-purple-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Memnuniyet</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2" id="satisfactionRate">0%</p>
+                </div>
+                <div class="p-3 bg-orange-50 rounded-lg">
+                    <i class="fas fa-star text-orange-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Messages Chart -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Günlük Mesaj Dağılımı</h3>
+            <div class="h-64">
+                <canvas id="messagesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Lead Sources -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Lead Kaynakları</h3>
+            <div class="h-64">
+                <canvas id="sourcesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Leads -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Son Lead'ler</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">İsim</th>
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">İletişim</th>
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">Lead Skoru</th>
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">Durum</th>
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">Tarih</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsTableBody">
+                    <!-- Dynamic content will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Response Times -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Yanıt Süreleri</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Ortalama Yanıt Süresi</span>
+                    <span class="font-medium" id="avgResponse">2.3s</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">En Hızlı Yanıt</span>
+                    <span class="font-medium text-green-600" id="fastestResponse">0.8s</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">En Yavaş Yanıt</span>
+                    <span class="font-medium text-red-600" id="slowestResponse">5.2s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversation Quality -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Konuşma Kalitesi</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Ortalama Konuşma Uzunluğu</span>
+                    <span class="font-medium" id="avgConversationLength">8 mesaj</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Tamamlanan Konuşmalar</span>
+                    <span class="font-medium" id="completedConversations">85%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Memnuniyet Oranı</span>
+                    <span class="font-medium" id="satisfactionScore">92%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Initialize charts
+    let messagesChart, sourcesChart;
+
+    function initCharts() {
+        // Messages Chart
+        const messagesCtx = document.getElementById('messagesChart').getContext('2d');
+        messagesChart = new Chart(messagesCtx, {
+            type: 'line',
+            data: {
+                labels: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
+                datasets: [{
+                    label: 'Gelen Mesajlar',
+                    data: [12, 19, 15, 25, 22, 18, 24],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Giden Mesajlar',
+                    data: [10, 15, 12, 20, 18, 16, 22],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Sources Chart
+        const sourcesCtx = document.getElementById('sourcesChart').getContext('2d');
+        sourcesChart = new Chart(sourcesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Web Sitesi', 'Mobil', 'API', 'Diğer'],
+                datasets: [{
+                    data: [45, 25, 20, 10],
+                    backgroundColor: [
+                        '#3b82f6',
+                        '#10b981', 
+                        '#8b5cf6',
+                        '#f59e0b'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Load analytics data
+    function loadAnalyticsData() {
+        // Burada API'den veri çekilecek
+        // Şimdilik placeholder veriler
+        document.getElementById('totalConversations').textContent = '1,247';
+        document.getElementById('leadRate').textContent = '23%';
+        document.getElementById('avgResponseTime').textContent = '2.3s';
+        document.getElementById('satisfactionRate').textContent = '92%';
+
+        // Recent leads table
+        const leadsTable = document.getElementById('leadsTableBody');
+        if (leadsTable) {
+            leadsTable.innerHTML = `
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-4 font-medium text-gray-900">Ahmet Yılmaz</td>
+                    <td class="py-3 px-4 text-gray-600">ahmet@example.com</td>
+                    <td class="py-3 px-4">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            85
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Sıcak
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-600">2 saat önce</td>
+                </tr>
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-4 font-medium text-gray-900">Ayşe Demir</td>
+                    <td class="py-3 px-4 text-gray-600">+90 555 123 4567</td>
+                    <td class="py-3 px-4">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            65
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Ilık
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-600">5 saat önce</td>
+                </tr>
+            `;
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initCharts();
+        loadAnalyticsData();
+    });
+</script>
+{% endblock %}

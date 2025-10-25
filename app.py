@@ -3,15 +3,22 @@ import json
 import requests
 import sqlite3
 import os
-from datetime import datetime
+from datetime import datetime,timedelta
 from markdown import markdown
 from functools import wraps
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+import secrets
+import psycopg2
+from psycopg2 import sql
+from saas import saas_bp
 
 app = Flask(__name__)
 app.secret_key = 'bisonar-test'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
+app.register_blueprint(saas_bp)
 
 # Database configuration
 app.config['DATABASE'] = 'blog.db'
@@ -22,8 +29,30 @@ app.config['ADMIN_PASSWORD'] = 'bisonar2024'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
+DATABASE_CONFIG = {
+    'host': 'superapp-dev-rds-postgres.cna2w8equl8b.eu-central-1.rds.amazonaws.com',
+    'port': 5432,
+    'dbname': 'ai-chatbot-test-db', 
+    'user': 'postgres',
+    'password': 'SuperApp_2025'
+}
+
 # Upload klasörünü oluştur
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def generate_csrf_token():
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_hex(16)
+    return session['csrf_token']
+
+# Template context'e ekleyin
+@app.context_processor
+def inject_csrf_token():
+    return dict(csrf_token=generate_csrf_token)
+
+# CSRF token doğrulama fonksiyonu
+def validate_csrf_token(token):
+    return token == session.get('csrf_token')
 
 @app.before_request
 def set_global_template_vars():
@@ -789,6 +818,792 @@ def generate_blog_with_ai(topic, language='en'):
         import traceback
         traceback.print_exc()
         return None
+    
+
+# ✅ YENİ: Google OAuth callback route'u
+@app.route('/oauth/google/callback')
+def google_oauth_callback():
+    """Google OAuth callback handler"""
+    try:
+        from saas.models.oauth import OAuthModel
+        from saas.config import GOOGLE_OAUTH_CONFIG
+        
+        code = request.args.get('code')
+        customer_id = request.args.get('state')
+        
+        if not code or not customer_id:
+            return "Invalid callback parameters", 400
+        
+        # Code'u token'a çevir
+        token_response = requests.post('https://oauth2.googleapis.com/token', data={
+            'client_id': GOOGLE_OAUTH_CONFIG['client_id'],
+            'client_secret': GOOGLE_OAUTH_CONFIG['client_secret'],
+            'code': code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': GOOGLE_OAUTH_CONFIG['redirect_uri']
+        })
+        
+        if token_response.status_code == 200:
+            tokens = token_response.json()
+            
+            # Google user info al
+            user_info = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', 
+                                   headers={'Authorization': f"Bearer {tokens['access_token']}"})
+            
+            google_email = user_info.json().get('email') if user_info.status_code == 200 else None
+            
+            # Token'ları kaydet
+            OAuthModel.save_google_tokens(customer_id, tokens, google_email)
+            
+            return redirect(f'https://dashboard.bisonar.com/success?customer_id={customer_id}')
+        else:
+            return "Google OAuth failed", 400
+            
+    except Exception as e:
+        print(f"OAuth callback error: {e}")
+        return "Authentication failed", 400
+    
+@app.route('/api/saas/test')
+def saas_test():
+    """SaaS sisteminin çalıştığını test et"""
+    return jsonify({
+        'status': 'SaaS system is running',
+        'endpoints': {
+            'chat': '/saas/api/v1/chat/{customer_id}',
+            'oauth_connect': '/saas/api/v1/oauth/google/connect/{customer_id}'
+        }
+    })
+
+# ✅ YENİ: Müşteri dashboard route'u (gelecekte kullanılacak)
+
+
+# Müşteri Onboarding Routes
+@app.route('/signup', methods=['GET', 'POST'])
+def customer_signup():
+    """Müşteri kayıt sayfası"""
+    if request.method == 'POST':
+        try:
+            # Form data'sını al
+            name = request.form['company_name']
+            email = request.form['email']
+            password = request.form['password']
+            website = request.form.get('website', '')
+            
+            # PostgreSQL'e kaydet
+            conn = psycopg2.connect(**DATABASE_CONFIG)
+            with conn.cursor() as cur:
+                # Hash password ve token oluştur
+                password_hash = generate_password_hash(password)
+                verification_token = secrets.token_urlsafe(32)
+                
+                # Müşteriyi doğrudan customers tablosuna ekle (ama verified değil)
+                cur.execute('''
+                    INSERT INTO customers (name, email, website_url, password_hash, verification_token, is_verified, is_active)
+                    VALUES (%s, %s, %s, %s, %s, false, false)
+                    RETURNING id
+                ''', (name, email, website, password_hash, verification_token))
+                
+                customer_id = cur.fetchone()[0]
+                
+                # Varsayılan prompt konfigürasyonu oluştur
+                cur.execute('''
+                    INSERT INTO tenant_prompts (customer_id, business_name, business_type, custom_prompt)
+                    VALUES (%s, %s, %s, %s)
+                ''', (customer_id, name, 'genel', f'Sen {name} şirketinin AI asistanısın. Profesyonel ve yardımsever ol.'))
+                
+                # Varsayılan widget config
+                cur.execute('''
+                    INSERT INTO tenant_widget_configs (customer_id, position, theme, primary_color)
+                    VALUES (%s, %s, %s, %s)
+                ''', (customer_id, 'bottom-right', 'light', '#007bff'))
+                
+                conn.commit()
+                
+                # Email gönder (simülasyon - gerçekte burada email API'si kullanın)
+                print(f"🔐 Verification email sent to {email}")
+                print(f"🔗 Verification URL: http://localhost:8000/verify/{verification_token}")
+                
+                flash('Kayıt başarılı! Lütfen emailinizi kontrol edin.', 'success')
+                return redirect(url_for('customer_login'))
+                
+        except psycopg2.IntegrityError:
+            flash('Bu email adresi zaten kayıtlı.', 'error')
+        except Exception as e:
+            flash('Kayıt sırasında bir hata oluştu.', 'error')
+            print(f"Signup error: {e}")
+        finally:
+            conn.close()
+    
+    return render_template('customer/signup.html')
+
+@app.route('/verify/<token>')
+def verify_customer(token):
+    """Email doğrulama"""
+    conn = psycopg2.connect(**DATABASE_CONFIG)
+    try:
+        with conn.cursor() as cur:
+            # Token'ı doğrula ve müşteriyi aktif et
+            cur.execute('''
+                UPDATE customers 
+                SET is_verified = true, is_active = true, verification_token = NULL
+                WHERE verification_token = %s AND is_verified = false
+                RETURNING id, name, email
+            ''', (token,))
+            
+            result = cur.fetchone()
+            if result:
+                customer_id, name, email = result
+                
+                # API key oluştur (eğer yoksa)
+                cur.execute('''
+                    UPDATE customers 
+                    SET api_key = %s
+                    WHERE id = %s AND api_key IS NULL
+                ''', (secrets.token_urlsafe(32), customer_id))
+                
+                conn.commit()
+                flash('Email doğrulandı! Artık giriş yapabilirsiniz.', 'success')
+                print(f"✅ Customer verified: {name} ({email})")
+            else:
+                flash('Geçersiz veya süresi dolmuş doğrulama linki.', 'error')
+                
+    except Exception as e:
+        flash('Doğrulama sırasında bir hata oluştu.', 'error')
+        print(f"Verification error: {e}")
+    finally:
+        conn.close()
+    
+    return redirect(url_for('customer_login'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def customer_login():
+    """Müşteri giriş sayfası"""
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        
+        print(f"🔐 Login attempt: {email}")  # DEBUG
+        
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        try:
+            with conn.cursor() as cur:
+                cur.execute('''
+                    SELECT id, name, password_hash, is_verified, api_key
+                    FROM customers 
+                    WHERE email = %s AND is_active = true
+                ''', (email,))
+                
+                result = cur.fetchone()
+                print(f"🔍 Database result: {result}")  # DEBUG
+                
+                if result:
+                    customer_id, name, password_hash, is_verified, api_key = result
+                    print(f"🔑 Password hash from DB: {password_hash}")  # DEBUG
+                    print(f"🔑 Password check: {check_password_hash(password_hash, password)}")  # DEBUG
+                    
+                    if check_password_hash(password_hash, password):
+                        if is_verified:
+                            # Session oluştur
+                            session_token = secrets.token_urlsafe(32)
+                            expires_at = datetime.now() + timedelta(days=30)
+                            
+                            cur.execute('''
+                                INSERT INTO customer_sessions (customer_id, session_token, expires_at)
+                                VALUES (%s, %s, %s)
+                            ''', (customer_id, session_token, expires_at))
+                            
+                            conn.commit()
+                            
+                            # Session'ı cookie'ye kaydet
+                            session['customer_id'] = customer_id
+                            session['customer_name'] = name
+                            session['customer_token'] = session_token
+                            
+                            print(f"✅ Login successful for: {name}")  # DEBUG
+                            flash('Giriş başarılı!', 'success')
+                            return redirect(url_for('customer_dashboard'))
+                        else:
+                            print("❌ Email not verified")  # DEBUG
+                            flash('Lütfen önce emailinizi doğrulayın.', 'error')
+                    else:
+                        print("❌ Password mismatch")  # DEBUG
+                        flash('Geçersiz email veya şifre.', 'error')
+                else:
+                    print("❌ Customer not found")  # DEBUG
+                    flash('Geçersiz email veya şifre.', 'error')
+                    
+        except Exception as e:
+            print(f"🚨 Login error: {e}")  # DEBUG
+            flash('Giriş sırasında bir hata oluştu.', 'error')
+        finally:
+            conn.close()
+    
+    return render_template('customer/login.html')
+
+@app.route('/logout')
+def customer_logout():
+    """Müşteri çıkış"""
+    session.clear()
+    flash('Çıkış yapıldı.', 'success')
+    return redirect(url_for('index'))
+
+@app.route('/api/customer/update-prompt', methods=['POST'])
+def update_customer_prompt():
+    """Müşteri prompt ayarlarını güncelle"""
+    if 'customer_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        customer_id = session['customer_id']
+        
+        # Services'i JSON formatına dönüştür
+        services_text = data.get('services', '')
+        if services_text:
+            # Virgülle ayrılmış string'i listeye çevir
+            services_list = [s.strip() for s in services_text.split(',') if s.strip()]
+            # Listeyi JSON string'ine dönüştür
+            services_json = json.dumps(services_list, ensure_ascii=False)
+        else:
+            services_json = json.dumps([])  # Boş array
+        
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        with conn.cursor() as cur:
+            cur.execute('''
+                UPDATE tenant_prompts 
+                SET business_name = %s,
+                    business_type = %s,
+                    services = %s::jsonb,
+                    custom_prompt = %s,
+                    welcome_message = %s,
+                    contact_required = %s,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE customer_id = %s
+            ''', (
+                data.get('business_name'),
+                data.get('business_type'),
+                services_json,  # JSON string olarak gönder
+                data.get('custom_prompt'),
+                data.get('welcome_message'),
+                data.get('contact_required', True),
+                customer_id
+            ))
+            
+            conn.commit()
+            return jsonify({'success': True, 'message': 'Prompt ayarları güncellendi'})
+            
+    except Exception as e:
+        print(f"Prompt update error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
+
+# Pricing Management Routes
+@app.route('/pricing-settings')
+def pricing_settings():
+    """Fiyat listesi yönetimi"""
+    if 'customer_id' not in session:
+        return redirect(url_for('customer_login'))
+    return render_template('customer/pricing.html')
+
+@app.route('/api/customer/pricing', methods=['GET', 'POST'])
+def customer_pricing():
+    """Fiyat listesi API"""
+    if 'customer_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    customer_id = session['customer_id']
+    
+    if request.method == 'GET':
+        # Mevcut fiyatları getir (tablo yoksa boş döndür)
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        try:
+            with conn.cursor() as cur:
+                # Tablo var mı kontrol et
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_schema = 'public' 
+                        AND table_name = 'tenant_pricing'
+                    );
+                """)
+                table_exists = cur.fetchone()[0]
+                
+                if not table_exists:
+                    return jsonify({'prices': []})
+                
+                cur.execute('''
+                    SELECT id, product_name, description, price, category, is_active, created_at
+                    FROM tenant_pricing 
+                    WHERE customer_id = %s
+                    ORDER BY created_at DESC
+                ''', (customer_id,))
+                
+                prices = []
+                for row in cur.fetchall():
+                    prices.append({
+                        'id': row[0],
+                        'product_name': row[1],
+                        'description': row[2],
+                        'price': float(row[3]) if row[3] else 0,
+                        'category': row[4],
+                        'is_active': row[5],
+                        'created_at': row[6].isoformat() if row[6] else None
+                    })
+                
+                return jsonify({'prices': prices})
+        except Exception as e:
+            print(f"Pricing GET error: {e}")
+            return jsonify({'prices': []})
+        finally:
+            conn.close()
+    
+    elif request.method == 'POST':
+        # Yeni fiyat ekle
+        data = request.get_json()
+        
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        try:
+            with conn.cursor() as cur:
+                # Tablo yoksa oluştur
+                cur.execute('''
+                    CREATE TABLE IF NOT EXISTS tenant_pricing (
+                        id SERIAL PRIMARY KEY,
+                        customer_id VARCHAR(50) NOT NULL,
+                        product_name VARCHAR(200) NOT NULL,
+                        description TEXT,
+                        price DECIMAL(10,2) NOT NULL,
+                        currency VARCHAR(3) DEFAULT 'TRY',
+                        category VARCHAR(50) DEFAULT 'product',
+                        is_active BOOLEAN DEFAULT true,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                
+                cur.execute('''
+                    INSERT INTO tenant_pricing 
+                    (customer_id, product_name, description, price, category, is_active)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                ''', (
+                    customer_id,
+                    data.get('product_name'),
+                    data.get('description'),
+                    data.get('price'),
+                    data.get('category', 'product'),
+                    data.get('is_active', True)
+                ))
+                
+                conn.commit()
+                return jsonify({'success': True, 'message': 'Fiyat eklendi'})
+        except Exception as e:
+            print(f"Pricing POST error: {e}")
+            return jsonify({'success': False, 'error': str(e)}), 500
+        finally:
+            conn.close()
+
+@app.route('/api/customer/pricing/<int:price_id>', methods=['DELETE'])
+def delete_customer_pricing(price_id):
+    """Fiyat silme API"""
+    if 'customer_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    customer_id = session['customer_id']
+    
+    conn = psycopg2.connect(**DATABASE_CONFIG)
+    try:
+        with conn.cursor() as cur:
+            cur.execute('''
+                DELETE FROM tenant_pricing 
+                WHERE id = %s AND customer_id = %s
+            ''', (price_id, customer_id))
+            
+            conn.commit()
+            return jsonify({'success': True, 'message': 'Fiyat silindi'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/ai-settings')
+def ai_settings():
+    """AI ayarları sayfası"""
+    if 'customer_id' not in session:
+        return redirect(url_for('customer_login'))
+    
+    conn = psycopg2.connect(**DATABASE_CONFIG)
+    try:
+        with conn.cursor() as cur:
+            cur.execute('''
+                SELECT c.id, c.name, c.email,
+                       tp.business_name, tp.business_type, tp.services,
+                       tp.custom_prompt, tp.welcome_message, tp.contact_required,
+                       tp.ai_model, tp.temperature
+                FROM customers c
+                LEFT JOIN tenant_prompts tp ON c.id = tp.customer_id
+                WHERE c.id = %s
+            ''', (session['customer_id'],))
+            
+            customer_data = cur.fetchone()
+            if customer_data:
+                columns = [desc[0] for desc in cur.description]
+                customer = dict(zip(columns, customer_data))
+                return render_template('customer/ai_settings.html', customer=customer)
+            else:
+                return render_template('customer/ai_settings.html', customer={})
+    except Exception as e:
+        print(f"AI settings error: {e}")
+        return render_template('customer/ai_settings.html', customer={})
+    finally:
+        conn.close()
+
+@app.route('/integrations')
+def integration_settings():
+    """Entegrasyonlar sayfası"""
+    if 'customer_id' not in session:
+        return redirect(url_for('customer_login'))
+    
+    conn = psycopg2.connect(**DATABASE_CONFIG)
+    try:
+        with conn.cursor() as cur:
+            # Sadece mevcut kolonları seç
+            cur.execute('''
+                SELECT c.id, c.name, c.webhook_secret,
+                       COALESCE(ct.google_email IS NOT NULL, false) as calendar_connected
+                FROM customers c
+                LEFT JOIN customer_oauth_tokens ct ON c.id = ct.customer_id AND ct.provider = 'google_calendar'
+                WHERE c.id = %s
+            ''', (session['customer_id'],))
+            
+            customer_data = cur.fetchone()
+            if customer_data:
+                columns = [desc[0] for desc in cur.description]
+                customer = dict(zip(columns, customer_data))
+                
+                # Yeni kolonlar için default değerler
+                customer['telegram_enabled'] = False
+                customer['telegram_chat_id'] = ''
+                customer['min_lead_score'] = 50
+                customer['telegram_notification_types'] = []
+                customer['calendar_enabled'] = False
+                customer['default_event_duration'] = 30
+                customer['working_hours'] = '9-18'
+                customer['calendar_event_types'] = []
+                customer['webhook_enabled'] = False
+                customer['webhook_url'] = ''
+                customer['webhook_events'] = []
+                
+                return render_template('customer/integrations.html', customer=customer)
+            else:
+                # Boş customer için default değerler
+                customer = {
+                    'telegram_enabled': False,
+                    'telegram_chat_id': '',
+                    'min_lead_score': 50,
+                    'telegram_notification_types': [],
+                    'calendar_enabled': False,
+                    'default_event_duration': 30,
+                    'working_hours': '9-18',
+                    'calendar_event_types': [],
+                    'webhook_enabled': False,
+                    'webhook_url': '',
+                    'webhook_events': [],
+                    'calendar_connected': False
+                }
+                return render_template('customer/integrations.html', customer=customer)
+    except Exception as e:
+        print(f"Integrations error: {e}")
+        # Hata durumunda default değerler
+        customer = {
+            'telegram_enabled': False,
+            'telegram_chat_id': '',
+            'min_lead_score': 50,
+            'telegram_notification_types': [],
+            'calendar_enabled': False,
+            'default_event_duration': 30,
+            'working_hours': '9-18',
+            'calendar_event_types': [],
+            'webhook_enabled': False,
+            'webhook_url': '',
+            'webhook_events': [],
+            'calendar_connected': False
+        }
+        return render_template('customer/integrations.html', customer=customer)
+    finally:
+        conn.close()
+
+@app.route('/save_telegram_settings', methods=['POST'])
+def save_telegram_settings():
+    """Telegram ayarlarını kaydet"""
+    if 'customer_id' not in session:
+        return jsonify({'success': False, 'message': 'Oturum bulunamadı'})
+    
+    try:
+        telegram_chat_id = request.form.get('telegram_chat_id')
+        min_lead_score = request.form.get('min_lead_score', 50)
+        notification_types = request.form.getlist('notification_types')
+        
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        with conn.cursor() as cur:
+            # Kolonları kontrol et ve gerekirse ekle
+            cur.execute("""
+                DO $$ 
+                BEGIN 
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='telegram_chat_id') THEN
+                        ALTER TABLE customers ADD COLUMN telegram_chat_id VARCHAR(50);
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='min_lead_score') THEN
+                        ALTER TABLE customers ADD COLUMN min_lead_score INTEGER DEFAULT 50;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='telegram_notification_types') THEN
+                        ALTER TABLE customers ADD COLUMN telegram_notification_types TEXT;
+                    END IF;
+                END $$;
+            """)
+            
+            # Ayarları kaydet
+            cur.execute('''
+                UPDATE customers 
+                SET telegram_chat_id = %s, 
+                    min_lead_score = %s,
+                    telegram_notification_types = %s
+                WHERE id = %s
+            ''', (telegram_chat_id, min_lead_score, json.dumps(notification_types), session['customer_id']))
+            
+            conn.commit()
+        
+        return jsonify({'success': True, 'message': 'Telegram ayarları kaydedildi'})
+        
+    except Exception as e:
+        print(f"Save telegram settings error: {e}")
+        return jsonify({'success': False, 'message': 'Kayıt başarısız'})
+
+
+
+@app.route('/save_calendar_settings', methods=['POST'])
+def save_calendar_settings():
+    """Calendar ayarlarını kaydet"""
+    if 'customer_id' not in session:
+        return jsonify({'success': False, 'message': 'Oturum bulunamadı'})
+    
+    try:
+        default_event_duration = request.form.get('default_event_duration', 30)
+        working_hours = request.form.get('working_hours', '9-18')
+        event_types = request.form.getlist('event_types')
+        
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        with conn.cursor() as cur:
+            # Kolonları kontrol et ve gerekirse ekle
+            cur.execute("""
+                DO $$ 
+                BEGIN 
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='default_event_duration') THEN
+                        ALTER TABLE customers ADD COLUMN default_event_duration INTEGER DEFAULT 30;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='working_hours') THEN
+                        ALTER TABLE customers ADD COLUMN working_hours VARCHAR(10) DEFAULT '9-18';
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='calendar_event_types') THEN
+                        ALTER TABLE customers ADD COLUMN calendar_event_types TEXT;
+                    END IF;
+                END $$;
+            """)
+            
+            # Ayarları kaydet
+            cur.execute('''
+                UPDATE customers 
+                SET default_event_duration = %s, 
+                    working_hours = %s,
+                    calendar_event_types = %s
+                WHERE id = %s
+            ''', (default_event_duration, working_hours, json.dumps(event_types), session['customer_id']))
+            
+            conn.commit()
+        
+        return jsonify({'success': True, 'message': 'Calendar ayarları kaydedildi'})
+        
+    except Exception as e:
+        print(f"Save calendar settings error: {e}")
+        return jsonify({'success': False, 'message': 'Kayıt başarısız'})
+
+@app.route('/save_webhook_settings', methods=['POST'])
+def save_webhook_settings():
+    """Webhook ayarlarını kaydet"""
+    if 'customer_id' not in session:
+        return jsonify({'success': False, 'message': 'Oturum bulunamadı'})
+    
+    try:
+        webhook_url = request.form.get('webhook_url')
+        webhook_secret = request.form.get('webhook_secret')
+        webhook_events = request.form.getlist('webhook_events')
+        
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        with conn.cursor() as cur:
+            # Kolonları kontrol et ve gerekirse ekle
+            cur.execute("""
+                DO $$ 
+                BEGIN 
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='webhook_url') THEN
+                        ALTER TABLE customers ADD COLUMN webhook_url VARCHAR(255);
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='webhook_events') THEN
+                        ALTER TABLE customers ADD COLUMN webhook_events TEXT;
+                    END IF;
+                END $$;
+            """)
+            
+            # Ayarları kaydet
+            cur.execute('''
+                UPDATE customers 
+                SET webhook_url = %s, 
+                    webhook_secret = %s,
+                    webhook_events = %s
+                WHERE id = %s
+            ''', (webhook_url, webhook_secret, json.dumps(webhook_events), session['customer_id']))
+            
+            conn.commit()
+        
+        return jsonify({'success': True, 'message': 'Webhook ayarları kaydedildi'})
+        
+    except Exception as e:
+        print(f"Save webhook settings error: {e}")
+        return jsonify({'success': False, 'message': 'Kayıt başarısız'})
+
+@app.route('/api/integrations/<integration>/toggle', methods=['POST'])
+def toggle_integration(integration):
+    """Entegrasyon durumunu değiştir"""
+    if 'customer_id' not in session:
+        return jsonify({'success': False, 'message': 'Oturum bulunamadı'})
+    
+    try:
+        data = request.get_json()
+        enabled = data.get('enabled', False)
+        
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        with conn.cursor() as cur:
+            if integration == 'telegram':
+                cur.execute("""
+                    DO $$ 
+                    BEGIN 
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='telegram_enabled') THEN
+                            ALTER TABLE customers ADD COLUMN telegram_enabled BOOLEAN DEFAULT false;
+                        END IF;
+                    END $$;
+                """)
+                cur.execute('UPDATE customers SET telegram_enabled = %s WHERE id = %s', 
+                          (enabled, session['customer_id']))
+                
+            elif integration == 'calendar':
+                cur.execute("""
+                    DO $$ 
+                    BEGIN 
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='calendar_enabled') THEN
+                            ALTER TABLE customers ADD COLUMN calendar_enabled BOOLEAN DEFAULT false;
+                        END IF;
+                    END $$;
+                """)
+                cur.execute('UPDATE customers SET calendar_enabled = %s WHERE id = %s', 
+                          (enabled, session['customer_id']))
+                
+            elif integration == 'webhook':
+                cur.execute("""
+                    DO $$ 
+                    BEGIN 
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='webhook_enabled') THEN
+                            ALTER TABLE customers ADD COLUMN webhook_enabled BOOLEAN DEFAULT false;
+                        END IF;
+                    END $$;
+                """)
+                cur.execute('UPDATE customers SET webhook_enabled = %s WHERE id = %s', 
+                          (enabled, session['customer_id']))
+            
+            conn.commit()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Toggle integration error: {e}")
+        return jsonify({'success': False, 'message': 'İşlem başarısız'})
+
+@app.route('/analytics')
+def analytics():
+    """Analitik sayfası"""
+    if 'customer_id' not in session:
+        return redirect(url_for('customer_login'))
+    return render_template('customer/analytics.html')
+
+# Google Calendar OAuth route'u
+@app.route('/oauth/google/connect')
+def google_calendar_connect():
+    """Google Calendar OAuth bağlantısı"""
+    if 'customer_id' not in session:
+        return redirect(url_for('customer_login'))
+    
+    # Google OAuth URL oluştur
+    from saas.config import GOOGLE_OAUTH_CONFIG
+    
+    auth_url = (
+        f"https://accounts.google.com/o/oauth2/v2/auth?"
+        f"client_id={GOOGLE_OAUTH_CONFIG['client_id']}&"
+        f"redirect_uri={GOOGLE_OAUTH_CONFIG['redirect_uri']}&"
+        f"response_type=code&"
+        f"scope=https://www.googleapis.com/auth/calendar.events&"
+        f"state={session['customer_id']}&"
+        f"access_type=offline&"
+        f"prompt=consent"
+    )
+    
+    return redirect(auth_url)
+
+
+# Dashboard route'unu güncelle
+@app.route('/dashboard')
+def customer_dashboard():
+    """Müşteri dashboard'u"""
+    if 'customer_id' not in session:
+        return redirect(url_for('customer_login'))
+    
+    conn = psycopg2.connect(**DATABASE_CONFIG)
+    try:
+        with conn.cursor() as cur:
+            # Müşteri bilgilerini getir
+            cur.execute('''
+                SELECT c.id, c.name, c.email, c.plan_type, c.api_key, c.trial_ends_at,
+                       tp.business_name, tp.business_type, tp.services,
+                       tw.position, tw.theme, tw.primary_color
+                FROM customers c
+                LEFT JOIN tenant_prompts tp ON c.id = tp.customer_id
+                LEFT JOIN tenant_widget_configs tw ON c.id = tw.customer_id
+                WHERE c.id = %s
+            ''', (session['customer_id'],))
+            
+            customer_data = cur.fetchone()
+            if customer_data:
+                columns = [desc[0] for desc in cur.description]
+                customer = dict(zip(columns, customer_data))
+                
+                # Basit usage stats
+                cur.execute('''
+                    SELECT COUNT(*) as total_sessions, 
+                           COALESCE(SUM(message_count), 0) as total_messages
+                    FROM chat_sessions 
+                    WHERE customer_id = %s
+                ''', (session['customer_id'],))
+                
+                usage = cur.fetchone()
+                return render_template('customer/dashboard.html', 
+                                    customer=customer, 
+                                    usage=usage)
+            else:
+                flash('Müşteri bilgileri bulunamadı.', 'error')
+                return redirect(url_for('login'))
+            
+    except Exception as e:
+        print(f"🚨 Dashboard error: {e}")
+        flash('Dashboard yüklenirken bir hata oluştu.', 'error')
+        return redirect(url_for('login'))
+    finally:
+        conn.close()
+
 
 if __name__ == '__main__':
     import jinja2

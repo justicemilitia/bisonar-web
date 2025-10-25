@@ -1,0 +1,187 @@
+{% extends "customer/base.html" %}
+
+{% block page_title %}AI Dashboard{% endblock %}
+{% block page_subtitle %}Chatbot performansınızı ve istatistiklerinizi takip edin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <!-- Total Messages -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Toplam Mesaj</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ usage[0] or 0 }}</p>
+                </div>
+                <div class="p-3 bg-blue-50 rounded-lg">
+                    <i class="fas fa-comments text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Sessions -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Toplam Session</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ usage[1] or 0 }}</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg">
+                    <i class="fas fa-users text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Plan</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2 capitalize">{{ customer.plan_type }}</p>
+                </div>
+                <div class="p-3 bg-orange-50 rounded-lg">
+                    <i class="fas fa-crown text-orange-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    {{ 'Süresiz' if not customer.trial_ends_at else customer.trial_ends_at.strftime('%d.%m.%Y') + ' kadar' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- API Status -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">API Durumu</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">Aktif</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions & API Info -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Hızlı Erişim</h3>
+            <div class="space-y-3">
+                <a href="{{ url_for('ai_settings') }}" class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-robot text-blue-600"></i>
+                        <span class="font-medium">AI Ayarları</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </a>
+                
+                <a href="{{ url_for('pricing_settings') }}" class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-tags text-green-600"></i>
+                        <span class="font-medium">Fiyat Listesi</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </a>
+                
+                <a href="{{ url_for('integration_settings') }}" class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-plug text-purple-600"></i>
+                        <span class="font-medium">Entegrasyonlar</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- API Information -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">API Bilgileri</h3>
+            <div class="space-y-4">
+                <!-- Customer ID -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Customer ID</label>
+                    <div class="flex rounded-md shadow-sm">
+                        <input type="text" readonly value="{{ customer.id }}" 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-900">
+                        <button onclick="copyToClipboard('{{ customer.id }}')" 
+                                class="px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50">
+                            Kopyala
+                        </button>
+                    </div>
+                </div>
+
+                <!-- API Key -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                    <div class="flex rounded-md shadow-sm">
+                        <input type="password" readonly value="{{ customer.api_key }}" 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-900" id="api-key">
+                        <button onclick="toggleApiKey()" 
+                                class="px-4 py-2 border border-l-0 border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
+                            Göster
+                        </button>
+                        <button onclick="copyToClipboard('{{ customer.api_key }}')" 
+                                class="px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50">
+                            Kopyala
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integration Code -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Websitenize Ekleyin</h3>
+        <p class="text-sm text-gray-500 mb-4">Aşağıdaki kodu web sitenizin &lt;head&gt; bölümüne ekleyin:</p>
+        
+        <pre class="bg-gray-800 text-green-400 p-4 rounded-lg text-sm overflow-x-auto"><code>&lt;script&gt;
+window.chatbotConfig = {
+    customer_id: '{{ customer.id }}',
+    api_key: '{{ customer.api_key }}',
+    position: 'bottom-right',
+    theme: 'light'
+};
+&lt;/script&gt;
+&lt;script src="{{ g.base_url }}/static/js/chatbot-widget.js"&gt;&lt;/script&gt;</code></pre>
+        
+        <button onclick="copyIntegrationCode()" 
+                class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            Kodu Kopyala
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleApiKey() {
+        const apiKeyInput = document.getElementById('api-key');
+        if (apiKeyInput.type === 'password') {
+            apiKeyInput.type = 'text';
+        } else {
+            apiKeyInput.type = 'password';
+        }
+    }
+
+    function copyIntegrationCode() {
+        const code = `<script>
+window.chatbotConfig = {
+    customer_id: '{{ customer.id }}',
+    api_key: '{{ customer.api_key }}',
+    position: 'bottom-right',
+    theme: 'light'
+};
+<\/script>
+<script src="{{ g.base_url }}/static/js/chatbot-widget.js"><\/script>`;
+        
+        navigator.clipboard.writeText(code).then(() => {
+            showNotification('Entegrasyon kodu kopyalandı!', 'success');
+        });
+    }
+</script>
+{% endblock %}
