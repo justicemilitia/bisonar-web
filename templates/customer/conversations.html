@@ -1,0 +1,321 @@
+{% extends "customer/base.html" %}
+
+{% block page_title %}Konuşmalar{% endblock %}
+{% block page_subtitle %}Tüm kanallardaki müşteri konuşmalarınız{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Filtreler ve Aksiyonlar -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="flex flex-wrap gap-2">
+                <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option>Tüm Durumlar</option>
+                    <option>Sıcak Lead</option>
+                    <option>Ilık Lead</option>
+                    <option>Soğuk Lead</option>
+                </select>
+                <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option>Tüm Kanallar</option>
+                    <option>WhatsApp</option>
+                    <option>Web Chat</option>
+                    <option>Telegram</option>
+                </select>
+                <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option>Son 24 Saat</option>
+                    <option>Son 7 Gün</option>
+                    <option>Son 30 Gün</option>
+                    <option>Özel Tarih</option>
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button class="bg-white text-gray-700 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
+                    <i class="fas fa-filter"></i>
+                    Filtrele
+                </button>
+                <button class="bg-white text-gray-700 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
+                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-sync-alt"></i>
+                    Yenile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Yeni Konuşmalar -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="font-semibold text-gray-900">🆕 Yeni Konuşmalar</h3>
+                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-sm font-medium">12</span>
+            </div>
+            <div class="p-4 space-y-4 max-h-[600px] overflow-y-auto">
+                {% for conversation in new_conversations %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors cursor-pointer" 
+                     onclick="openConversation('{{ conversation.id }}')">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
+                                {{ conversation.customer_name[0] }}
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900">{{ conversation.customer_name }}</h4>
+                                <span class="text-xs font-medium px-2 py-1 rounded-full 
+                                    {% if conversation.lead_score >= 70 %}bg-red-100 text-red-800
+                                    {% elif conversation.lead_score >= 40 %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ conversation.lead_score }} 
+                                    {% if conversation.lead_score >= 70 %}🔥
+                                    {% elif conversation.lead_score >= 40 %}☀️
+                                    {% else %}❄️{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500">{{ conversation.last_activity }}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ conversation.last_message }}</p>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="px-2 py-1 rounded-full 
+                            {% if conversation.channel == 'whatsapp' %}bg-green-100 text-green-800
+                            {% elif conversation.channel == 'web' %}bg-blue-100 text-blue-800
+                            {% else %}bg-purple-100 text-purple-800{% endif %}">
+                            {% if conversation.channel == 'whatsapp' %}📱 WhatsApp
+                            {% elif conversation.channel == 'web' %}🌐 Web Chat
+                            {% else %}✈️ Telegram{% endif %}
+                        </span>
+                        <span class="px-2 py-1 rounded-full 
+                            {% if conversation.priority == 'urgent' %}bg-red-100 text-red-800
+                            {% elif conversation.priority == 'demo' %}bg-blue-100 text-blue-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ conversation.priority }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Devam Eden Konuşmalar -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="font-semibold text-gray-900">🔄 Devam Eden</h3>
+                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-sm font-medium">8</span>
+            </div>
+            <div class="p-4 space-y-4 max-h-[600px] overflow-y-auto">
+                {% for conversation in active_conversations %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors cursor-pointer" 
+                     onclick="openConversation('{{ conversation.id }}')">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-semibold">
+                                {{ conversation.customer_name[0] }}
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900">{{ conversation.customer_name }}</h4>
+                                <span class="text-xs font-medium px-2 py-1 rounded-full 
+                                    {% if conversation.lead_score >= 70 %}bg-red-100 text-red-800
+                                    {% elif conversation.lead_score >= 40 %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ conversation.lead_score }} 
+                                    {% if conversation.lead_score >= 70 %}🔥
+                                    {% elif conversation.lead_score >= 40 %}☀️
+                                    {% else %}❄️{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500">{{ conversation.last_activity }}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ conversation.last_message }}</p>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="px-2 py-1 rounded-full 
+                            {% if conversation.channel == 'whatsapp' %}bg-green-100 text-green-800
+                            {% elif conversation.channel == 'web' %}bg-blue-100 text-blue-800
+                            {% else %}bg-purple-100 text-purple-800{% endif %}">
+                            {% if conversation.channel == 'whatsapp' %}📱 WhatsApp
+                            {% elif conversation.channel == 'web' %}🌐 Web Chat
+                            {% else %}✈️ Telegram{% endif %}
+                        </span>
+                        <span class="px-2 py-1 rounded-full 
+                            {% if conversation.priority == 'urgent' %}bg-red-100 text-red-800
+                            {% elif conversation.priority == 'demo' %}bg-blue-100 text-blue-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ conversation.priority }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Tamamlanan Konuşmalar -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="font-semibold text-gray-900">✅ Tamamlanan</h3>
+                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-sm font-medium">15</span>
+            </div>
+            <div class="p-4 space-y-4 max-h-[600px] overflow-y-auto">
+                {% for conversation in completed_conversations %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors cursor-pointer" 
+                     onclick="openConversation('{{ conversation.id }}')">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-semibold">
+                                {{ conversation.customer_name[0] }}
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900">{{ conversation.customer_name }}</h4>
+                                <span class="text-xs font-medium px-2 py-1 rounded-full 
+                                    {% if conversation.lead_score >= 70 %}bg-red-100 text-red-800
+                                    {% elif conversation.lead_score >= 40 %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ conversation.lead_score }} 
+                                    {% if conversation.lead_score >= 70 %}🔥
+                                    {% elif conversation.lead_score >= 40 %}☀️
+                                    {% else %}❄️{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500">{{ conversation.last_activity }}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ conversation.last_message }}</p>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="px-2 py-1 rounded-full 
+                            {% if conversation.channel == 'whatsapp' %}bg-green-100 text-green-800
+                            {% elif conversation.channel == 'web' %}bg-blue-100 text-blue-800
+                            {% else %}bg-purple-100 text-purple-800{% endif %}">
+                            {% if conversation.channel == 'whatsapp' %}📱 WhatsApp
+                            {% elif conversation.channel == 'web' %}🌐 Web Chat
+                            {% else %}✈️ Telegram{% endif %}
+                        </span>
+                        <span class="px-2 py-1 rounded-full 
+                            {% if conversation.priority == 'urgent' %}bg-red-100 text-red-800
+                            {% elif conversation.priority == 'demo' %}bg-blue-100 text-blue-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ conversation.priority }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Conversation Detail Modal -->
+<div id="conversationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-xl font-semibold text-gray-900">Konuşma Detayı</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-6 max-h-[60vh] overflow-y-auto">
+            <div id="conversationDetail" class="space-y-4">
+                <!-- Conversation content will be loaded here -->
+            </div>
+        </div>
+        <div class="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+            <button onclick="closeModal()" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                Kapat
+            </button>
+            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                <i class="fas fa-phone"></i>
+                Ara
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openConversation(conversationId) {
+    // Show loading
+    document.getElementById('conversationDetail').innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></div>';
+    document.getElementById('conversationModal').classList.remove('hidden');
+    
+    // Fetch conversation details
+    fetch(`/api/conversations/${conversationId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayConversation(data.conversation);
+            } else {
+                document.getElementById('conversationDetail').innerHTML = '<div class="text-center py-8 text-red-600">Konuşma yüklenirken hata oluştu</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('conversationDetail').innerHTML = '<div class="text-center py-8 text-red-600">Bağlantı hatası</div>';
+        });
+}
+
+function displayConversation(conversation) {
+    let html = `
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-user text-gray-500"></i>
+                    <span>${conversation.customer_name}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-phone text-gray-500"></i>
+                    <span>${conversation.phone || 'Belirtilmemiş'}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-envelope text-gray-500"></i>
+                    <span>${conversation.email || 'Belirtilmemiş'}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-chart-line text-gray-500"></i>
+                    <span>Lead: ${conversation.lead_score} 
+                        ${conversation.lead_score >= 70 ? '🔥' : conversation.lead_score >= 40 ? '☀️' : '❄️'}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="space-y-4">`;
+    
+    conversation.messages.forEach(message => {
+        html += `
+            <div class="flex ${message.type === 'user' ? 'justify-start' : 'justify-end'}">
+                <div class="max-w-[80%] ${message.type === 'user' ? 'bg-gray-100' : 'bg-blue-600 text-white'} rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2 text-sm ${message.type === 'user' ? 'text-gray-600' : 'text-blue-100'}">
+                        <span>${message.type === 'user' ? conversation.customer_name : 'AI Asistan'}</span>
+                        <span>${message.timestamp}</span>
+                    </div>
+                    <p class="text-sm">${message.text}</p>
+                </div>
+            </div>`;
+    });
+    
+    html += '</div>';
+    document.getElementById('conversationDetail').innerHTML = html;
+}
+
+function closeModal() {
+    document.getElementById('conversationModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('conversationModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}

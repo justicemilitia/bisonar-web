@@ -224,6 +224,50 @@ def get_template_data():
 # Initialize database on startup
 init_db()
 
+#price and billing
+@app.route('/pricing')
+def pricing():
+    """Fiyatlandırma sayfası"""
+    # Meta tags için context - blog sayfasındaki gibi
+    context = {
+        'meta_title': 'Pricing Plans - Bisonar AI Assistant',
+        'meta_description': 'Choose the perfect plan for your business. Start with 15-day free trial. No credit card required.',
+        'canonical_url': f"{request.host_url.rstrip('/')}/pricing",
+        'og_type': 'website',
+        'og_image': f"{request.host_url.rstrip('/')}/static/images/og-pricing.jpg"
+    }
+    return render_template('pricing.html', **context)
+
+@app.route('/billing')
+def billing():
+    """Ödeme sayfası"""
+    if 'customer_id' not in session:
+        return redirect('/customer_login')
+    
+    plan = request.args.get('plan', 'demo')
+    
+    # Customer bilgilerini al
+    conn = psycopg2.connect(**DATABASE_CONFIG)
+    try:
+        with conn.cursor() as cur:
+            cur.execute('SELECT id, name, email, current_plan FROM customers WHERE id = %s', (session['customer_id'],))
+            customer_data = cur.fetchone()
+            
+            if customer_data:
+                columns = [desc[0] for desc in cur.description]
+                customer = dict(zip(columns, customer_data))
+                customer['selected_plan'] = plan
+                
+                return f"Billing page for plan: {plan} - Customer: {customer['name']}"
+            else:
+                return redirect('/customer_login')
+    except Exception as e:
+        print(f"Billing error: {e}")
+        return redirect('/dashboard')
+    finally:
+        conn.close()
+
+
 # Add sample blog posts if none exist
 def add_sample_posts():
     conn = get_db_connection()
@@ -874,7 +918,6 @@ def saas_test():
         }
     })
 
-# ✅ YENİ: Müşteri dashboard route'u (gelecekte kullanılacak)
 
 
 # Müşteri Onboarding Routes
@@ -1256,6 +1299,8 @@ def ai_settings():
     finally:
         conn.close()
 
+#integrations
+
 @app.route('/integrations')
 def integration_settings():
     """Entegrasyonlar sayfası"""
@@ -1265,7 +1310,7 @@ def integration_settings():
     conn = psycopg2.connect(**DATABASE_CONFIG)
     try:
         with conn.cursor() as cur:
-            # Sadece mevcut kolonları seç
+            # Customer temel bilgilerini al
             cur.execute('''
                 SELECT c.id, c.name, c.webhook_secret,
                        COALESCE(ct.google_email IS NOT NULL, false) as calendar_connected
@@ -1279,55 +1324,71 @@ def integration_settings():
                 columns = [desc[0] for desc in cur.description]
                 customer = dict(zip(columns, customer_data))
                 
-                # Yeni kolonlar için default değerler
-                customer['telegram_enabled'] = False
-                customer['telegram_chat_id'] = ''
-                customer['min_lead_score'] = 50
-                customer['telegram_notification_types'] = []
-                customer['calendar_enabled'] = False
-                customer['default_event_duration'] = 30
-                customer['working_hours'] = '9-18'
-                customer['calendar_event_types'] = []
-                customer['webhook_enabled'] = False
-                customer['webhook_url'] = ''
-                customer['webhook_events'] = []
+                # Telegram preferences
+                cur.execute('''
+                    SELECT receive_notifications, notification_types, customer_telegram_id, min_lead_score
+                    FROM tenant_telegram_preferences 
+                    WHERE customer_id = %s
+                ''', (session['customer_id'],))
+                
+                telegram_data = cur.fetchone()
+                if telegram_data:
+                    customer['telegram_enabled'] = telegram_data[0]
+                    customer['telegram_notification_types'] = telegram_data[1] or []
+                    customer['telegram_chat_id'] = telegram_data[2] or ''
+                    customer['min_lead_score'] = telegram_data[3] or 50
+                else:
+                    customer['telegram_enabled'] = False
+                    customer['telegram_notification_types'] = []
+                    customer['telegram_chat_id'] = ''
+                    customer['min_lead_score'] = 50
+                
+                # Calendar preferences
+                cur.execute('''
+                    SELECT auto_create_events, event_types, event_duration_minutes, 
+                           working_hours_start, working_hours_end
+                    FROM tenant_calendar_preferences 
+                    WHERE customer_id = %s
+                ''', (session['customer_id'],))
+                
+                calendar_data = cur.fetchone()
+                if calendar_data:
+                    customer['calendar_enabled'] = calendar_data[0]
+                    customer['calendar_event_types'] = calendar_data[1] or []
+                    customer['default_event_duration'] = calendar_data[2] or 30
+                    customer['working_hours'] = f"{calendar_data[3].strftime('%H:%M')} - {calendar_data[4].strftime('%H:%M')}"
+                else:
+                    customer['calendar_enabled'] = False
+                    customer['calendar_event_types'] = []
+                    customer['default_event_duration'] = 30
+                    customer['working_hours'] = '09:00 - 18:00'
+                
+                # Webhook preferences
+                cur.execute('''
+                    SELECT config, is_active 
+                    FROM tenant_integrations 
+                    WHERE customer_id = %s AND integration_type = 'webhook'
+                ''', (session['customer_id'],))
+                
+                webhook_data = cur.fetchone()
+                if webhook_data:
+                    config = webhook_data[0] or {}
+                    customer['webhook_enabled'] = webhook_data[1]
+                    customer['webhook_url'] = config.get('webhook_url', '')
+                    customer['webhook_secret'] = config.get('webhook_secret', '')
+                    customer['webhook_events'] = config.get('webhook_events', [])
+                else:
+                    customer['webhook_enabled'] = False
+                    customer['webhook_url'] = ''
+                    customer['webhook_secret'] = customer.get('webhook_secret', '')
+                    customer['webhook_events'] = []
                 
                 return render_template('customer/integrations.html', customer=customer)
             else:
-                # Boş customer için default değerler
-                customer = {
-                    'telegram_enabled': False,
-                    'telegram_chat_id': '',
-                    'min_lead_score': 50,
-                    'telegram_notification_types': [],
-                    'calendar_enabled': False,
-                    'default_event_duration': 30,
-                    'working_hours': '9-18',
-                    'calendar_event_types': [],
-                    'webhook_enabled': False,
-                    'webhook_url': '',
-                    'webhook_events': [],
-                    'calendar_connected': False
-                }
-                return render_template('customer/integrations.html', customer=customer)
+                return render_template('customer/integrations.html', customer={})
     except Exception as e:
         print(f"Integrations error: {e}")
-        # Hata durumunda default değerler
-        customer = {
-            'telegram_enabled': False,
-            'telegram_chat_id': '',
-            'min_lead_score': 50,
-            'telegram_notification_types': [],
-            'calendar_enabled': False,
-            'default_event_duration': 30,
-            'working_hours': '9-18',
-            'calendar_event_types': [],
-            'webhook_enabled': False,
-            'webhook_url': '',
-            'webhook_events': [],
-            'calendar_connected': False
-        }
-        return render_template('customer/integrations.html', customer=customer)
+        return render_template('customer/integrations.html', customer={})
     finally:
         conn.close()
 
@@ -1341,33 +1402,34 @@ def save_telegram_settings():
         telegram_chat_id = request.form.get('telegram_chat_id')
         min_lead_score = request.form.get('min_lead_score', 50)
         notification_types = request.form.getlist('notification_types')
+        telegram_enabled = request.form.get('telegram_enabled') == 'true'
         
         conn = psycopg2.connect(**DATABASE_CONFIG)
         with conn.cursor() as cur:
-            # Kolonları kontrol et ve gerekirse ekle
-            cur.execute("""
-                DO $$ 
-                BEGIN 
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='telegram_chat_id') THEN
-                        ALTER TABLE customers ADD COLUMN telegram_chat_id VARCHAR(50);
-                    END IF;
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='min_lead_score') THEN
-                        ALTER TABLE customers ADD COLUMN min_lead_score INTEGER DEFAULT 50;
-                    END IF;
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='telegram_notification_types') THEN
-                        ALTER TABLE customers ADD COLUMN telegram_notification_types TEXT;
-                    END IF;
-                END $$;
-            """)
+            # Önce kaydın var olup olmadığını kontrol et
+            cur.execute('SELECT id FROM tenant_telegram_preferences WHERE customer_id = %s', (session['customer_id'],))
+            existing = cur.fetchone()
             
-            # Ayarları kaydet
-            cur.execute('''
-                UPDATE customers 
-                SET telegram_chat_id = %s, 
-                    min_lead_score = %s,
-                    telegram_notification_types = %s
-                WHERE id = %s
-            ''', (telegram_chat_id, min_lead_score, json.dumps(notification_types), session['customer_id']))
+            if existing:
+                # Varsa update et
+                cur.execute('''
+                    UPDATE tenant_telegram_preferences 
+                    SET receive_notifications = %s,
+                        notification_types = %s,
+                        customer_telegram_id = %s,
+                        min_lead_score = %s,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE customer_id = %s
+                ''', (telegram_enabled, json.dumps(notification_types), 
+                      telegram_chat_id, min_lead_score, session['customer_id']))
+            else:
+                # Yoksa insert et
+                cur.execute('''
+                    INSERT INTO tenant_telegram_preferences 
+                    (customer_id, receive_notifications, notification_types, customer_telegram_id, min_lead_score)
+                    VALUES (%s, %s, %s, %s, %s)
+                ''', (session['customer_id'], telegram_enabled, json.dumps(notification_types), 
+                      telegram_chat_id, min_lead_score))
             
             conn.commit()
         
@@ -1375,9 +1437,7 @@ def save_telegram_settings():
         
     except Exception as e:
         print(f"Save telegram settings error: {e}")
-        return jsonify({'success': False, 'message': 'Kayıt başarısız'})
-
-
+        return jsonify({'success': False, 'message': f'Kayıt başarısız: {str(e)}'})
 
 @app.route('/save_calendar_settings', methods=['POST'])
 def save_calendar_settings():
@@ -1389,41 +1449,67 @@ def save_calendar_settings():
         default_event_duration = request.form.get('default_event_duration', 30)
         working_hours = request.form.get('working_hours', '9-18')
         event_types = request.form.getlist('event_types')
+        calendar_enabled = request.form.get('calendar_enabled') == 'true'
+        
+        print(f"DEBUG: working_hours value: {working_hours}")
+        
+        # Working hours'ı parse et - daha güvenli şekilde
+        if working_hours and '-' in working_hours:
+            try:
+                start_time, end_time = working_hours.split('-')
+                # Boşlukları temizle ve formatı düzelt
+                start_time = start_time.strip() + ':00'
+                end_time = end_time.strip() + ':00'
+                print(f"DEBUG: Parsed start_time: {start_time}, end_time: {end_time}")
+            except Exception as e:
+                print(f"DEBUG: Error parsing working_hours: {e}")
+                # Varsayılan değerler
+                start_time = '09:00:00'
+                end_time = '18:00:00'
+        else:
+            # Varsayılan değerler
+            start_time = '09:00:00'
+            end_time = '18:00:00'
         
         conn = psycopg2.connect(**DATABASE_CONFIG)
         with conn.cursor() as cur:
-            # Kolonları kontrol et ve gerekirse ekle
-            cur.execute("""
-                DO $$ 
-                BEGIN 
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='default_event_duration') THEN
-                        ALTER TABLE customers ADD COLUMN default_event_duration INTEGER DEFAULT 30;
-                    END IF;
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='working_hours') THEN
-                        ALTER TABLE customers ADD COLUMN working_hours VARCHAR(10) DEFAULT '9-18';
-                    END IF;
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='calendar_event_types') THEN
-                        ALTER TABLE customers ADD COLUMN calendar_event_types TEXT;
-                    END IF;
-                END $$;
-            """)
+            # Önce kaydın var olup olmadığını kontrol et
+            cur.execute('SELECT id FROM tenant_calendar_preferences WHERE customer_id = %s', (session['customer_id'],))
+            existing = cur.fetchone()
             
-            # Ayarları kaydet
-            cur.execute('''
-                UPDATE customers 
-                SET default_event_duration = %s, 
-                    working_hours = %s,
-                    calendar_event_types = %s
-                WHERE id = %s
-            ''', (default_event_duration, working_hours, json.dumps(event_types), session['customer_id']))
+            if existing:
+                # Varsa update et
+                cur.execute('''
+                    UPDATE tenant_calendar_preferences 
+                    SET auto_create_events = %s,
+                        event_types = %s,
+                        event_duration_minutes = %s,
+                        working_hours_start = %s,
+                        working_hours_end = %s,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE customer_id = %s
+                ''', (calendar_enabled, json.dumps(event_types), 
+                      default_event_duration, start_time, end_time, session['customer_id']))
+            else:
+                # Yoksa insert et
+                cur.execute('''
+                    INSERT INTO tenant_calendar_preferences 
+                    (customer_id, auto_create_events, event_types, event_duration_minutes, 
+                     working_hours_start, working_hours_end)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                ''', (session['customer_id'], calendar_enabled, json.dumps(event_types), 
+                      default_event_duration, start_time, end_time))
             
             conn.commit()
+            print("DEBUG: Calendar settings saved successfully")
         
         return jsonify({'success': True, 'message': 'Calendar ayarları kaydedildi'})
         
     except Exception as e:
         print(f"Save calendar settings error: {e}")
-        return jsonify({'success': False, 'message': 'Kayıt başarısız'})
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': f'Kayıt başarısız: {str(e)}'})
 
 @app.route('/save_webhook_settings', methods=['POST'])
 def save_webhook_settings():
@@ -1435,30 +1521,43 @@ def save_webhook_settings():
         webhook_url = request.form.get('webhook_url')
         webhook_secret = request.form.get('webhook_secret')
         webhook_events = request.form.getlist('webhook_events')
+        webhook_enabled = request.form.get('webhook_enabled') == 'true'
+        
+        config = {
+            'webhook_url': webhook_url,
+            'webhook_secret': webhook_secret,
+            'webhook_events': webhook_events
+        }
         
         conn = psycopg2.connect(**DATABASE_CONFIG)
         with conn.cursor() as cur:
-            # Kolonları kontrol et ve gerekirse ekle
-            cur.execute("""
-                DO $$ 
-                BEGIN 
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='webhook_url') THEN
-                        ALTER TABLE customers ADD COLUMN webhook_url VARCHAR(255);
-                    END IF;
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='webhook_events') THEN
-                        ALTER TABLE customers ADD COLUMN webhook_events TEXT;
-                    END IF;
-                END $$;
-            """)
+            # Webhook secret'ı customers tablosuna da kaydet
+            if webhook_secret:
+                cur.execute('''
+                    UPDATE customers SET webhook_secret = %s WHERE id = %s
+                ''', (webhook_secret, session['customer_id']))
             
-            # Ayarları kaydet
-            cur.execute('''
-                UPDATE customers 
-                SET webhook_url = %s, 
-                    webhook_secret = %s,
-                    webhook_events = %s
-                WHERE id = %s
-            ''', (webhook_url, webhook_secret, json.dumps(webhook_events), session['customer_id']))
+            # Önce kaydın var olup olmadığını kontrol et
+            cur.execute('SELECT id FROM tenant_integrations WHERE customer_id = %s AND integration_type = %s', 
+                       (session['customer_id'], 'webhook'))
+            existing = cur.fetchone()
+            
+            if existing:
+                # Varsa update et
+                cur.execute('''
+                    UPDATE tenant_integrations 
+                    SET config = %s,
+                        is_active = %s,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE customer_id = %s AND integration_type = %s
+                ''', (json.dumps(config), webhook_enabled, session['customer_id'], 'webhook'))
+            else:
+                # Yoksa insert et
+                cur.execute('''
+                    INSERT INTO tenant_integrations 
+                    (customer_id, integration_type, config, is_active)
+                    VALUES (%s, %s, %s, %s)
+                ''', (session['customer_id'], 'webhook', json.dumps(config), webhook_enabled))
             
             conn.commit()
         
@@ -1466,7 +1565,7 @@ def save_webhook_settings():
         
     except Exception as e:
         print(f"Save webhook settings error: {e}")
-        return jsonify({'success': False, 'message': 'Kayıt başarısız'})
+        return jsonify({'success': False, 'message': f'Kayıt başarısız: {str(e)}'})
 
 @app.route('/api/integrations/<integration>/toggle', methods=['POST'])
 def toggle_integration(integration):
@@ -1477,52 +1576,88 @@ def toggle_integration(integration):
     try:
         data = request.get_json()
         enabled = data.get('enabled', False)
+        customer_id = session['customer_id']
+        
+        print(f"DEBUG: Toggling {integration} to {enabled} for customer {customer_id}")
         
         conn = psycopg2.connect(**DATABASE_CONFIG)
         with conn.cursor() as cur:
             if integration == 'telegram':
-                cur.execute("""
-                    DO $$ 
-                    BEGIN 
-                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='telegram_enabled') THEN
-                            ALTER TABLE customers ADD COLUMN telegram_enabled BOOLEAN DEFAULT false;
-                        END IF;
-                    END $$;
-                """)
-                cur.execute('UPDATE customers SET telegram_enabled = %s WHERE id = %s', 
-                          (enabled, session['customer_id']))
+                print("DEBUG: Updating telegram preferences")
+                # Önce kaydın var olup olmadığını kontrol et
+                cur.execute('SELECT id FROM tenant_telegram_preferences WHERE customer_id = %s', (customer_id,))
+                existing = cur.fetchone()
+                
+                if existing:
+                    # Varsa update et
+                    cur.execute('''
+                        UPDATE tenant_telegram_preferences 
+                        SET receive_notifications = %s, updated_at = CURRENT_TIMESTAMP
+                        WHERE customer_id = %s
+                    ''', (enabled, customer_id))
+                else:
+                    # Yoksa insert et
+                    cur.execute('''
+                        INSERT INTO tenant_telegram_preferences (customer_id, receive_notifications)
+                        VALUES (%s, %s)
+                    ''', (customer_id, enabled))
                 
             elif integration == 'calendar':
-                cur.execute("""
-                    DO $$ 
-                    BEGIN 
-                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='calendar_enabled') THEN
-                            ALTER TABLE customers ADD COLUMN calendar_enabled BOOLEAN DEFAULT false;
-                        END IF;
-                    END $$;
-                """)
-                cur.execute('UPDATE customers SET calendar_enabled = %s WHERE id = %s', 
-                          (enabled, session['customer_id']))
+                print("DEBUG: Updating calendar preferences")
+                # Önce kaydın var olup olmadığını kontrol et
+                cur.execute('SELECT id FROM tenant_calendar_preferences WHERE customer_id = %s', (customer_id,))
+                existing = cur.fetchone()
+                
+                if existing:
+                    # Varsa update et
+                    cur.execute('''
+                        UPDATE tenant_calendar_preferences 
+                        SET auto_create_events = %s, updated_at = CURRENT_TIMESTAMP
+                        WHERE customer_id = %s
+                    ''', (enabled, customer_id))
+                else:
+                    # Yoksa insert et
+                    cur.execute('''
+                        INSERT INTO tenant_calendar_preferences (customer_id, auto_create_events)
+                        VALUES (%s, %s)
+                    ''', (customer_id, enabled))
                 
             elif integration == 'webhook':
-                cur.execute("""
-                    DO $$ 
-                    BEGIN 
-                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='customers' AND column_name='webhook_enabled') THEN
-                            ALTER TABLE customers ADD COLUMN webhook_enabled BOOLEAN DEFAULT false;
-                        END IF;
-                    END $$;
-                """)
-                cur.execute('UPDATE customers SET webhook_enabled = %s WHERE id = %s', 
-                          (enabled, session['customer_id']))
+                print("DEBUG: Updating webhook integration")
+                # Önce kaydın var olup olmadığını kontrol et
+                cur.execute('SELECT id FROM tenant_integrations WHERE customer_id = %s AND integration_type = %s', 
+                           (customer_id, 'webhook'))
+                existing = cur.fetchone()
+                
+                if existing:
+                    # Varsa update et
+                    cur.execute('''
+                        UPDATE tenant_integrations 
+                        SET is_active = %s, updated_at = CURRENT_TIMESTAMP
+                        WHERE customer_id = %s AND integration_type = %s
+                    ''', (enabled, customer_id, 'webhook'))
+                else:
+                    # Yoksa insert et
+                    cur.execute('''
+                        INSERT INTO tenant_integrations (customer_id, integration_type, is_active)
+                        VALUES (%s, %s, %s)
+                    ''', (customer_id, 'webhook', enabled))
+            else:
+                return jsonify({'success': False, 'message': f'Geçersiz entegrasyon: {integration}'})
             
             conn.commit()
+            print(f"DEBUG: Successfully toggled {integration}")
         
         return jsonify({'success': True})
         
     except Exception as e:
-        print(f"Toggle integration error: {e}")
-        return jsonify({'success': False, 'message': 'İşlem başarısız'})
+        print(f"DEBUG: Toggle integration error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': f'İşlem başarısız: {str(e)}'})
+
+#integrations finish
+
 
 @app.route('/analytics')
 def analytics():
@@ -1604,6 +1739,107 @@ def customer_dashboard():
     finally:
         conn.close()
 
+
+#konuşmalar
+
+# app.py'ye ekle
+
+@app.route('/customer/conversations')
+def customer_conversations():
+    if 'customer_id' not in session:
+        return jsonify({'success': False, 'message': 'Oturum bulunamadı'})
+    customer_id = session.get('customer_id')
+    
+    # Örnek konuşma verileri - gerçek uygulamada database'den çekilecek
+    sample_conversations = {
+        'new_conversations': [
+            {
+                'id': 1,
+                'customer_name': 'Ahmet Yılmaz',
+                'lead_score': 85,
+                'last_activity': '2 dk önce',
+                'last_message': 'Merhaba, fiyat bilgisi almak istiyorum. n8n otomasyon paketiniz ne kadar?',
+                'channel': 'whatsapp',
+                'priority': 'urgent'
+            },
+            {
+                'id': 2,
+                'customer_name': 'Mehmet Kaya',
+                'lead_score': 62,
+                'last_activity': '1 saat önce',
+                'last_message': 'Demo talep ediyorum, iletişime geçebilir misiniz?',
+                'channel': 'web',
+                'priority': 'demo'
+            }
+        ],
+        'active_conversations': [
+            {
+                'id': 3,
+                'customer_name': 'Elif Demir',
+                'lead_score': 92,
+                'last_activity': '5 saat önce',
+                'last_message': 'Acil teknik destek gerekiyor! Sistemimde sorun var.',
+                'channel': 'whatsapp',
+                'priority': 'urgent'
+            }
+        ],
+        'completed_conversations': [
+            {
+                'id': 4,
+                'customer_name': 'Selin Yıldız',
+                'lead_score': 35,
+                'last_activity': '2 gün önce',
+                'last_message': 'Teşekkürler, bilgiler için. İhtiyaç olursa döneceğim.',
+                'channel': 'telegram',
+                'priority': 'info'
+            }
+        ]
+    }
+    
+    return render_template('customer/conversations.html', **sample_conversations)
+
+@app.route('/api/conversations/<int:conversation_id>')
+
+def get_conversation_detail(conversation_id):
+    if 'customer_id' not in session:
+        return jsonify({'success': False, 'message': 'Oturum bulunamadı'})
+    # Örnek konuşma detayı - gerçek uygulamada database'den çekilecek
+    sample_conversation = {
+        'success': True,
+        'conversation': {
+            'id': conversation_id,
+            'customer_name': 'Ahmet Yılmaz',
+            'phone': '0555 123 45 67',
+            'email': 'ahmet@email.com',
+            'lead_score': 85,
+            'messages': [
+                {
+                    'type': 'user',
+                    'text': 'Merhaba, fiyat bilgisi almak istiyorum. n8n otomasyon paketiniz ne kadar?',
+                    'timestamp': '14:30'
+                },
+                {
+                    'type': 'ai',
+                    'text': 'Merhaba Ahmet Bey! Tabii ki. Temel n8n otomasyon paketimiz 5.000 TL\'dir. Size özel teklifimiz için iletişim bilgilerinizi alabilir miyim?',
+                    'timestamp': '14:31'
+                },
+                {
+                    'type': 'user',
+                    'text': 'Telefonum: 0555 123 45 67. En kısa sürede arar mısınız?',
+                    'timestamp': '14:32'
+                },
+                {
+                    'type': 'ai',
+                    'text': 'Teşekkürler! Danışmanımız en kısa sürede sizi arayacaktır. İyi günler dilerim.',
+                    'timestamp': '14:32'
+                }
+            ]
+        }
+    }
+    
+    return jsonify(sample_conversation)
+
+#konuşmalar biril
 
 if __name__ == '__main__':
     import jinja2

@@ -3,7 +3,7 @@ from saas.models.customer import CustomerModel
 
 class N8nCoordinator:
     def __init__(self):
-        self.n8n_webhook_url = "https://g30rnaqf.rpcld.co/webhook/e1977560-4b62-48cd-bec2-530d2f3a62a4"
+        self.n8n_webhook_url = "https://g30rnaqf.rpcld.co/webhook/749e7030-3ce7-4fdc-8720-f1667ecab2f4"
     
     def send_to_n8n(self, customer_id, message_data):
         """n8n'e müşteri konfigürasyonu ile birlikte data gönder"""

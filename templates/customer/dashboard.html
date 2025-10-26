@@ -7,158 +7,322 @@
 <div class="space-y-6">
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <!-- Total Messages -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Toplam Mesaj</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ usage[0] or 0 }}</p>
+        <!-- ... mevcut stat kartları aynı ... -->
+    </div>
+
+    <!-- Test Environment & Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Test Environment -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">🤖 Canlı Test Ortamı</h3>
+            <p class="text-sm text-gray-600 mb-4">Gerçek API'nizle chatbot'unuzu test edin. Canlı yanıtlar alın.</p>
+            
+            <!-- API Status -->
+            <div class="flex items-center mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                <span class="text-green-800 font-medium">API Bağlantısı: Aktif</span>
+                <span class="ml-auto text-sm text-green-600">Customer ID: {{ customer.id }}</span>
+            </div>
+            
+            <!-- Test Chat Container -->
+            <div class="border border-gray-200 rounded-lg bg-gray-50 p-4 mb-4" style="height: 400px; overflow-y: auto;" id="testChatContainer">
+                <div class="chat-message bot-message mb-3">
+                    <div class="bg-blue-100 text-blue-800 rounded-lg p-3 max-w-xs">
+                        👋 Merhaba! Ben Bisonar AI asistanınız. Gerçek API üzerinden size yardımcı oluyorum.
+                    </div>
                 </div>
-                <div class="p-3 bg-blue-50 rounded-lg">
-                    <i class="fas fa-comments text-blue-600 text-xl"></i>
+                <div class="chat-message bot-message mb-3">
+                    <div class="bg-blue-100 text-blue-800 rounded-lg p-3 max-w-xs">
+                        Bu test ortamında chatbot'unuzun gerçek davranışını gözlemleyebilirsiniz.
+                    </div>
                 </div>
+            </div>
+
+            <!-- Test Input -->
+            <div class="flex space-x-2 mb-3">
+                <input type="text" id="testChatInput" 
+                       placeholder="Chatbot'a mesaj yazın..." 
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       onkeypress="handleTestChatKeyPress(event)">
+                <button onclick="sendTestMessage()" 
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Gönder
+                </button>
+            </div>
+
+            <!-- Quick Test Messages -->
+            <div class="mb-4">
+                <p class="text-sm text-gray-600 mb-2">Hızlı test mesajları:</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="sendQuickTestMessage('Merhaba')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg transition-colors">
+                        Merhaba
+                    </button>
+                    <button onclick="sendQuickTestMessage('n8n otomasyon hakkında bilgi')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg transition-colors">
+                        n8n Otomasyon
+                    </button>
+                    <button onclick="sendQuickTestMessage('AI iş akışları')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg transition-colors">
+                        AI İş Akışları
+                    </button>
+                    <button onclick="sendQuickTestMessage('Fiyat bilgisi almak istiyorum')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg transition-colors">
+                        Fiyat Bilgisi
+                    </button>
+                    <button onclick="sendQuickTestMessage('Danışmanlık hizmetleriniz neler?')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-lg transition-colors">
+                        Danışmanlık
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Replies Container -->
+            <div id="quickRepliesContainer" class="hidden">
+                <p class="text-sm text-gray-600 mb-2">Hızlı Yanıtlar:</p>
+                <div class="flex flex-wrap gap-2" id="quickReplies"></div>
             </div>
         </div>
 
-        <!-- Active Sessions -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Toplam Session</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ usage[1] or 0 }}</p>
-                </div>
-                <div class="p-3 bg-green-50 rounded-lg">
-                    <i class="fas fa-users text-green-600 text-xl"></i>
+        <!-- Quick Actions & API Info -->
+        <div class="space-y-6">
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Hızlı Erişim</h3>
+                <div class="space-y-3">
+                    <a href="{{ url_for('ai_settings') }}" class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-robot text-blue-600"></i>
+                            <span class="font-medium">AI Ayarları</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </a>
+                    
+                    <a href="/pricing" class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-tags text-green-600"></i>
+                            <span class="font-medium">Paket Yükselt</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </a>
+                    
+                    <a href="{{ url_for('integration_settings') }}" class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-plug text-purple-600"></i>
+                            <span class="font-medium">Entegrasyonlar</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </a>
                 </div>
             </div>
-        </div>
 
-        <!-- Plan -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Plan</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2 capitalize">{{ customer.plan_type }}</p>
-                </div>
-                <div class="p-3 bg-orange-50 rounded-lg">
-                    <i class="fas fa-crown text-orange-600 text-xl"></i>
-                </div>
-            </div>
-            <div class="mt-4">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                    {{ 'Süresiz' if not customer.trial_ends_at else customer.trial_ends_at.strftime('%d.%m.%Y') + ' kadar' }}
-                </span>
-            </div>
-        </div>
-
-        <!-- API Status -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 card-hover">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">API Durumu</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">Aktif</p>
-                </div>
-                <div class="p-3 bg-green-50 rounded-lg">
-                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+            <!-- Test Results -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Test İstatistikleri</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Test Mesajları:</span>
+                        <span class="font-semibold text-blue-600" id="testMessageCount">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Başarılı Yanıtlar:</span>
+                        <span class="font-semibold text-green-600" id="successfulResponses">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Ortalama Yanıt Süresi:</span>
+                        <span class="font-semibold text-purple-600" id="avgResponseTime">0ms</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">API Kullanımı:</span>
+                        <span class="font-semibold text-orange-600" id="apiUsage">0/100</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Actions & API Info -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Hızlı Erişim</h3>
-            <div class="space-y-3">
-                <a href="{{ url_for('ai_settings') }}" class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div class="flex items-center space-x-3">
-                        <i class="fas fa-robot text-blue-600"></i>
-                        <span class="font-medium">AI Ayarları</span>
-                    </div>
-                    <i class="fas fa-chevron-right text-gray-400"></i>
-                </a>
-                
-                <a href="{{ url_for('pricing_settings') }}" class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div class="flex items-center space-x-3">
-                        <i class="fas fa-tags text-green-600"></i>
-                        <span class="font-medium">Fiyat Listesi</span>
-                    </div>
-                    <i class="fas fa-chevron-right text-gray-400"></i>
-                </a>
-                
-                <a href="{{ url_for('integration_settings') }}" class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div class="flex items-center space-x-3">
-                        <i class="fas fa-plug text-purple-600"></i>
-                        <span class="font-medium">Entegrasyonlar</span>
-                    </div>
-                    <i class="fas fa-chevron-right text-gray-400"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- API Information -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">API Bilgileri</h3>
-            <div class="space-y-4">
-                <!-- Customer ID -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Customer ID</label>
-                    <div class="flex rounded-md shadow-sm">
-                        <input type="text" readonly value="{{ customer.id }}" 
-                               class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-900">
-                        <button onclick="copyToClipboard('{{ customer.id }}')" 
-                                class="px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50">
-                            Kopyala
-                        </button>
-                    </div>
-                </div>
-
-                <!-- API Key -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
-                    <div class="flex rounded-md shadow-sm">
-                        <input type="password" readonly value="{{ customer.api_key }}" 
-                               class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-900" id="api-key">
-                        <button onclick="toggleApiKey()" 
-                                class="px-4 py-2 border border-l-0 border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
-                            Göster
-                        </button>
-                        <button onclick="copyToClipboard('{{ customer.api_key }}')" 
-                                class="px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50">
-                            Kopyala
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Integration Code -->
+    <!-- API Information -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Websitenize Ekleyin</h3>
-        <p class="text-sm text-gray-500 mb-4">Aşağıdaki kodu web sitenizin &lt;head&gt; bölümüne ekleyin:</p>
-        
-        <pre class="bg-gray-800 text-green-400 p-4 rounded-lg text-sm overflow-x-auto"><code>&lt;script&gt;
-window.chatbotConfig = {
-    customer_id: '{{ customer.id }}',
-    api_key: '{{ customer.api_key }}',
-    position: 'bottom-right',
-    theme: 'light'
-};
-&lt;/script&gt;
-&lt;script src="{{ g.base_url }}/static/js/chatbot-widget.js"&gt;&lt;/script&gt;</code></pre>
-        
-        <button onclick="copyIntegrationCode()" 
-                class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-            Kodu Kopyala
-        </button>
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">API Bilgileri</h3>
+        <div class="space-y-4">
+            <!-- Customer ID -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Customer ID</label>
+                <div class="flex rounded-md shadow-sm">
+                    <input type="text" readonly value="{{ customer.id }}" 
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-900">
+                    <button onclick="copyToClipboard('{{ customer.id }}')" 
+                            class="px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50">
+                        Kopyala
+                    </button>
+                </div>
+            </div>
+
+            <!-- API Key -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                <div class="flex rounded-md shadow-sm">
+                    <input type="password" readonly value="{{ customer.api_key }}" 
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-900" id="api-key">
+                    <button onclick="toggleApiKey()" 
+                            class="px-4 py-2 border border-l-0 border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
+                        Göster
+                    </button>
+                    <button onclick="copyToClipboard('{{ customer.api_key }}')" 
+                            class="px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50">
+                        Kopyala
+                    </button>
+                </div>
+            </div>
+
+            <!-- API Endpoint -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">API Endpoint</label>
+                <div class="flex rounded-md shadow-sm">
+                    <input type="text" readonly value="POST http://localhost:8000/saas/api/v1/chat/{{ customer.id }}" 
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-900">
+                    <button onclick="copyToClipboard('POST http://localhost:8000/saas/api/v1/chat/{{ customer.id }}')" 
+                            class="px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50">
+                        Kopyala
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    let testMessageCount = 0;
+    let successfulResponses = 0;
+    let totalResponseTime = 0;
+    let currentSession = {
+        sessionId: '{{ customer.id }}',
+        conversation: []
+    };
+
+    function handleTestChatKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendTestMessage();
+        }
+    }
+
+    function sendTestMessage() {
+        const input = document.getElementById('testChatInput');
+        const message = input.value.trim();
+        
+        if (!message) return;
+
+        // Kullanıcı mesajını ekle
+        addMessageToTestChat(message, 'user');
+        input.value = '';
+        
+        testMessageCount++;
+        updateTestStats();
+        
+        // Gerçek API'ye mesaj gönder
+        sendMessageToRealAPI(message);
+    }
+
+    function sendQuickTestMessage(message) {
+        document.getElementById('testChatInput').value = message;
+        sendTestMessage();
+    }
+
+    function addMessageToTestChat(message, sender) {
+        const container = document.getElementById('testChatContainer');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${sender}-message mb-3 flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+        
+        const bgColor = sender === 'user' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
+        messageDiv.innerHTML = `
+            <div class="${bgColor} rounded-lg p-3 max-w-xs">
+                ${message}
+            </div>
+        `;
+        
+        container.appendChild(messageDiv);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function sendMessageToRealAPI(message) {
+        const startTime = Date.now();
+        
+        // Gerçek API çağrısı
+        fetch('/saas/api/v1/chat/{{ customer.id }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': '{{ customer.api_key }}'
+            },
+            body: JSON.stringify({
+                message: message,
+                session: currentSession
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const responseTime = Date.now() - startTime;
+            totalResponseTime += responseTime;
+            
+            if (data.success) {
+                successfulResponses++;
+                
+                // Bot yanıtını ekle
+                addMessageToTestChat(data.response, 'bot');
+                
+                // Quick replies'leri göster
+                if (data.quickReplies && data.quickReplies.length > 0) {
+                    showQuickReplies(data.quickReplies);
+                }
+                
+                // Session'ı güncelle
+                if (data.session) {
+                    currentSession = data.session;
+                }
+                
+                // Usage bilgisini güncelle
+                if (data.usage) {
+                    updateUsageStats(data.usage);
+                }
+            } else {
+                addMessageToTestChat('Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.', 'bot');
+            }
+            
+            updateTestStats();
+        })
+        .catch(error => {
+            console.error('Test chat error:', error);
+            addMessageToTestChat('API bağlantı hatası. Lütfen daha sonra tekrar deneyin.', 'bot');
+            updateTestStats();
+        });
+    }
+
+    function showQuickReplies(quickReplies) {
+        const container = document.getElementById('quickRepliesContainer');
+        const repliesDiv = document.getElementById('quickReplies');
+        
+        repliesDiv.innerHTML = '';
+        quickReplies.forEach(reply => {
+            const button = document.createElement('button');
+            button.className = 'text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-lg transition-colors';
+            button.textContent = reply;
+            button.onclick = () => sendQuickTestMessage(reply);
+            repliesDiv.appendChild(button);
+        });
+        
+        container.classList.remove('hidden');
+    }
+
+    function updateUsageStats(usage) {
+        document.getElementById('apiUsage').textContent = `${usage.used}/${usage.limit}`;
+    }
+
+    function updateTestStats() {
+        document.getElementById('testMessageCount').textContent = testMessageCount;
+        document.getElementById('successfulResponses').textContent = successfulResponses;
+        
+        const avgTime = successfulResponses > 0 ? Math.round(totalResponseTime / successfulResponses) : 0;
+        document.getElementById('avgResponseTime').textContent = avgTime + 'ms';
+    }
+
     function toggleApiKey() {
         const apiKeyInput = document.getElementById('api-key');
         if (apiKeyInput.type === 'password') {
@@ -168,19 +332,14 @@ window.chatbotConfig = {
         }
     }
 
-    function copyIntegrationCode() {
-        const code = `<script>
-window.chatbotConfig = {
-    customer_id: '{{ customer.id }}',
-    api_key: '{{ customer.api_key }}',
-    position: 'bottom-right',
-    theme: 'light'
-};
-<\/script>
-<script src="{{ g.base_url }}/static/js/chatbot-widget.js"><\/script>`;
-        
-        navigator.clipboard.writeText(code).then(() => {
-            showNotification('Entegrasyon kodu kopyalandı!', 'success');
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Basit bir feedback
+            const originalText = event.target.textContent;
+            event.target.textContent = 'Kopyalandı!';
+            setTimeout(() => {
+                event.target.textContent = originalText;
+            }, 2000);
         });
     }
 </script>
