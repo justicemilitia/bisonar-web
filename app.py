@@ -119,7 +119,6 @@ def utility_processor():
         return f"{base_url}{current_path}"
     
     def generate_hreflang():
-        """Hreflang URL'lerini oluştur - HASH'SİZ"""
         base_url = 'https://www.bisonar.com' if not request.host.startswith(('127.0.0.1', 'localhost')) else f'http://{request.host}'
         
         current_path = request.path
@@ -214,30 +213,362 @@ def get_db_connection():
     return conn
 
 def get_template_data():
-    current_lang = session.get('language', 'en')
-    t_data = TRANSLATIONS.get(current_lang, TRANSLATIONS['en'])
+    # URL'den dili al (örnek: /en/blog, /tr/blog)
+    path_parts = request.path.split('/')
+    if len(path_parts) > 1 and path_parts[1] in ['en', 'tr']:
+        lang = path_parts[1]
+    else:
+        # URL'de dil yoksa session'dan al veya varsayılan 'en' kullan
+        lang = session.get('language', 'en')
+    
+    print(f"🔍 Dil seçimi - URL: {path_parts}, Seçilen: {lang}")
+    
+    # Dil verisini al
+    t_data = TRANSLATIONS.get(lang, TRANSLATIONS['en'])
+    
+    # DEBUG: Hangi dil verilerinin yüklendiğini kontrol et
+    if 'hero' in t_data:
+        hero_data = t_data['hero']
+        print(f"🎯 Hero keys in {lang}: {list(hero_data.keys())}")
+        if 'features' in hero_data:
+            print(f"   ✅ Features mevcut - title: {hero_data['features'].get('title', 'YOK')}")
+        else:
+            print("   ❌ Features EKSİK!")
+    
     return {
         't': t_data,
-        'current_lang': current_lang
+        'current_lang': lang
     }
+
+def get_url_for_lang(lang, endpoint=None, **values):
+    """Belirtilen dil için URL oluştur"""
+    if endpoint is None:
+        # Mevcut endpoint'i kullan
+        endpoint = request.endpoint
+    
+    print(f"🔍 URL Generation - Endpoint: {endpoint}, Lang: {lang}, Values: {values}")
+    
+    # Özel durumlar
+    if endpoint == 'index':
+        return f'/{lang}'
+    elif endpoint == 'blog_list':
+        return f'/{lang}/blog'
+    elif endpoint == 'blog_detail':
+        if 'slug' in values:
+            return f'/{lang}/blog/{values["slug"]}'
+        else:
+            # Eğer slug yoksa mevcut slug'ı kullan
+            if hasattr(request, 'view_args') and 'slug' in request.view_args:
+                return f'/{lang}/blog/{request.view_args["slug"]}'
+            return f'/{lang}/blog'
+    elif endpoint == 'pricing':
+        return f'/{lang}/pricing'
+    
+    # Mevcut path'i kullanarak URL oluştur
+    current_path = request.path
+    print(f"🔍 Current path: {current_path}")
+    
+    # Path'te dil prefix'i var mı kontrol et
+    if current_path.startswith('/en/') or current_path.startswith('/tr/'):
+        # Mevcut dil prefix'ini yeni dil ile değiştir
+        new_path = f'/{lang}{current_path[3:]}'
+        print(f"🔍 Replacing language prefix: {current_path} -> {new_path}")
+    elif current_path in ['/en', '/tr']:
+        # Sadece dil path'i varsa
+        new_path = f'/{lang}'
+        print(f"🔍 Root language path: {current_path} -> {new_path}")
+    elif current_path == '/' or current_path == '':
+        # Ana sayfa
+        new_path = f'/{lang}'
+        print(f"🔍 Home page: {current_path} -> {new_path}")
+    else:
+        # Dil prefix'i yoksa, mevcut path'e dil ekle
+        new_path = f'/{lang}{current_path}'
+        print(f"🔍 Adding language prefix: {current_path} -> {new_path}")
+    
+    return new_path
+
+# Template context'e URL oluşturma fonksiyonunu ekle
+@app.context_processor
+def inject_url_functions():
+    return dict(get_url_for_lang=get_url_for_lang)
 
 # Initialize database on startup
 init_db()
 
-#price and billing
+# Ana sayfa route'ları - multilingual
+@app.route('/')
+@app.route('/<lang>')
+def index(lang=None):
+    """Ana sayfa - dil desteği ile"""
+    if lang and lang not in ['en', 'tr']:
+        # Geçersiz dil için ana sayfaya yönlendir
+        return redirect(url_for('index'))
+    
+    # Dil ayarla
+    if lang:
+        session['language'] = lang
+    else:
+        # Dil belirtilmemişse varsayılan 'en' kullan
+        lang = session.get('language', 'en')
+        if not lang:
+            lang = 'en'
+            session['language'] = lang
+    
+    template_data = get_template_data()
+    
+    # Ana sayfa için meta bilgilerini güncelle
+    g.meta_title = 'Bisonar - AI Automation & Intelligent Workflows'
+    g.meta_description = 'n8n-based AI automation systems, AI-powered workflows and digital transformation consulting. Multilingual solutions.'
+    g.canonical_url = g.base_url  # Ana sayfa için sadece base URL
+    
+    # Get latest 3 blog posts for homepage
+    conn = get_db_connection()
+    posts = conn.execute('''
+        SELECT id, title, slug, excerpt, author, read_time, image_url, created_at
+        FROM posts 
+        WHERE is_published = 1 
+        ORDER BY created_at DESC 
+        LIMIT 3
+    ''').fetchall()
+    conn.close()
+    
+    blog_posts = [dict(post) for post in posts]
+    
+    return render_template('index.html', **template_data, blog_posts=blog_posts)
+
+# Blog route'ları - multilingual
+@app.route('/blog')
+@app.route('/<lang>/blog')
+def blog_list(lang=None):
+    """Blog list page - multilingual"""
+    if lang and lang not in ['en', 'tr']:
+        return redirect(url_for('blog_list'))
+    
+    # Dil ayarla
+    if lang:
+        session['language'] = lang
+    
+    template_data = get_template_data()
+    
+    # Blog listesi için meta bilgilerini güncelle
+    g.meta_title = 'Blog - AI Automation Insights | Bisonar'
+    g.meta_description = 'Latest insights on AI automation, n8n workflows, and business technology'
+    
+    # Canonical URL için doğru dil prefix'ini kullan
+    if lang:
+        g.canonical_url = f"{g.base_url}/{lang}/blog"
+    else:
+        g.canonical_url = f"{g.base_url}/blog"
+    
+    g.og_type = 'website'
+    
+    conn = get_db_connection()
+    posts = conn.execute('''
+        SELECT id, title, slug, excerpt, author, read_time, image_url, created_at
+        FROM posts 
+        WHERE is_published = 1 
+        ORDER BY created_at DESC
+    ''').fetchall()
+    conn.close()
+    
+    blog_posts = [dict(post) for post in posts]
+    
+    return render_template('blog_list.html', **template_data, blog_posts=blog_posts)
+
+@app.route('/blog/<slug>')
+@app.route('/<lang>/blog/<slug>')
+def blog_detail(slug, lang=None):
+    """Blog detail page - multilingual"""
+    if lang and lang not in ['en', 'tr']:
+        return redirect(url_for('blog_detail', slug=slug))
+    
+    # Dil ayarla
+    if lang:
+        session['language'] = lang
+    
+    template_data = get_template_data()
+    
+    conn = get_db_connection()
+    post = conn.execute('''
+        SELECT id, title, slug, content, excerpt, author, read_time, image_url, created_at
+        FROM posts 
+        WHERE slug = ? AND is_published = 1
+    ''', (slug,)).fetchone()
+    conn.close()
+    
+    if post is None:
+        return "Post not found", 404
+    
+    post_dict = dict(post)
+    post_dict['content_html'] = markdown(post_dict['content'])
+    
+    # Blog detayı için meta bilgilerini güncelle
+    g.meta_title = f"{post_dict['title']} | Bisonar"
+    g.meta_description = post_dict['excerpt']
+    
+    # Canonical URL için doğru dil prefix'ini kullan
+    if lang:
+        g.canonical_url = f"{g.base_url}/{lang}/blog/{slug}"
+    else:
+        g.canonical_url = f"{g.base_url}/blog/{slug}"
+    
+    g.og_type = 'article'
+    g.og_image = post_dict['image_url']
+    
+    return render_template('blog_detail.html', **template_data, post=post_dict)
+
+# Pricing route'ları - multilingual
 @app.route('/pricing')
-def pricing():
-    """Fiyatlandırma sayfası"""
-    # Meta tags için context - blog sayfasındaki gibi
+@app.route('/<lang>/pricing')
+def pricing(lang=None):
+    """Fiyatlandırma sayfası - multilingual"""
+    if lang and lang not in ['en', 'tr']:
+        return redirect(url_for('pricing'))
+    
+    # Dil ayarla
+    if lang:
+        session['language'] = lang
+    
+    template_data = get_template_data()
+    
+    # Meta tags için context
     context = {
         'meta_title': 'Pricing Plans - Bisonar AI Assistant',
         'meta_description': 'Choose the perfect plan for your business. Start with 15-day free trial. No credit card required.',
-        'canonical_url': f"{request.host_url.rstrip('/')}/pricing",
         'og_type': 'website',
         'og_image': f"{request.host_url.rstrip('/')}/static/images/og-pricing.jpg"
     }
-    return render_template('pricing.html', **context)
+    
+    # Canonical URL için doğru dil prefix'ini kullan
+    if lang:
+        context['canonical_url'] = f"{g.base_url}/{lang}/pricing"
+    else:
+        context['canonical_url'] = f"{g.base_url}/pricing"
+    
+    return render_template('pricing.html', **context, **template_data)
 
+# Hash route'ları - BUNLARI EKLEYELİM
+@app.route('/#about')
+@app.route('/<lang>/#about')
+def about_section(lang=None):
+    """About section için canonical ana sayfa olmalı"""
+    if lang and lang in ['en', 'tr']:
+        return redirect(f'/{lang}')
+    return redirect(url_for('index'))
+
+@app.route('/#services')
+@app.route('/<lang>/#services')
+def services_section(lang=None):
+    """Services section için canonical ana sayfa olmalı"""
+    if lang and lang in ['en', 'tr']:
+        return redirect(f'/{lang}')
+    return redirect(url_for('index'))
+
+@app.route('/#success')
+@app.route('/<lang>/#success')
+def success_section(lang=None):
+    """Success section için canonical ana sayfa olmalı"""
+    if lang and lang in ['en', 'tr']:
+        return redirect(f'/{lang}')
+    return redirect(url_for('index'))
+
+@app.route('/#industries')
+@app.route('/<lang>/#industries')
+def industries_section(lang=None):
+    """Industries section için canonical ana sayfa olmalı"""
+    if lang and lang in ['en', 'tr']:
+        return redirect(f'/{lang}')
+    return redirect(url_for('index'))
+
+@app.route('/#contact')
+@app.route('/<lang>/#contact')
+def contact_section(lang=None):
+    """Contact section için canonical ana sayfa olmalı"""
+    if lang and lang in ['en', 'tr']:
+        return redirect(f'/{lang}')
+    return redirect(url_for('index'))
+
+# Dil değiştirme route'u
+@app.route('/set-language/<lang>')
+def set_language(lang):
+    """Dil değiştirme - AJAX ve normal istekleri destekler"""
+    print(f"🔍 Language change requested: {lang}")
+    print(f"🔍 Current path: {request.path}")
+    print(f"🔍 Referrer: {request.referrer}")
+    print(f"🔍 AJAX request: {request.headers.get('X-Requested-With')}")
+    
+    if lang in ['en', 'tr']:
+        session['language'] = lang
+        print(f"✅ Language set in session: {lang}")
+        
+        # AJAX isteği mi kontrol et
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        if is_ajax:
+            # REFERRER URL'sini kullanarak doğru path'i bul
+            referrer = request.referrer or url_for('index')
+            print(f"🔍 Using referrer for path: {referrer}")
+            
+            if referrer:
+                from urllib.parse import urlparse
+                parsed = urlparse(referrer)
+                current_path = parsed.path
+                
+                # Referrer'daki path'i kullanarak yeni URL oluştur
+                if current_path.startswith('/en/') or current_path.startswith('/tr/'):
+                    new_path = f'/{lang}{current_path[3:]}'
+                elif current_path in ['/en', '/tr']:
+                    new_path = f'/{lang}'
+                elif current_path == '/' or current_path == '':
+                    new_path = f'/{lang}'
+                else:
+                    new_path = f'/{lang}{current_path}'
+                
+                print(f"🔀 Generated new path: {new_path}")
+                
+                response_data = {
+                    'success': True, 
+                    'language': lang, 
+                    'message': 'Language changed successfully',
+                    'new_path': new_path
+                }
+                print(f"📤 Sending JSON response: {response_data}")
+                return jsonify(response_data)
+        
+        # Normal istek için redirect (mevcut kod aynı kalabilir)
+        referrer = request.referrer or url_for('index')
+        
+        if referrer:
+            from urllib.parse import urlparse, urlunparse
+            parsed = urlparse(referrer)
+            path = parsed.path
+            
+            # Path'te dil prefix'i var mı kontrol et
+            if path.startswith('/en/') or path.startswith('/tr/'):
+                new_path = f'/{lang}' + path[3:]
+            elif path in ['/en', '/tr']:
+                new_path = f'/{lang}'
+            elif path == '/' or path == '':
+                new_path = f'/{lang}'
+            else:
+                new_path = f'/{lang}{path}'
+            
+            new_referrer = urlunparse((
+                parsed.scheme,
+                parsed.netloc,
+                new_path,
+                parsed.params,
+                parsed.query,
+                parsed.fragment
+            ))
+            print(f"🔀 Redirecting to: {new_referrer}")
+            return redirect(new_referrer)
+    
+    return redirect(request.referrer or url_for('index'))
+    
+
+# Diğer route'lar (admin, API, vs.) aynı kalacak...
 @app.route('/billing')
 def billing():
     """Ödeme sayfası"""
@@ -266,7 +597,6 @@ def billing():
         return redirect('/dashboard')
     finally:
         conn.close()
-
 
 # Add sample blog posts if none exist
 def add_sample_posts():
@@ -384,112 +714,7 @@ def normalize_url():
         new_path = request.path.replace('//', '/')
         return redirect(new_path, code=301)
 
-# Normal Routes
-@app.route('/')
-def index():
-    template_data = get_template_data()
-    
-    # Ana sayfa için meta bilgilerini güncelle
-    g.meta_title = 'Bisonar - AI Automation & Intelligent Workflows'
-    g.meta_description = 'n8n-based AI automation systems, AI-powered workflows and digital transformation consulting. Multilingual solutions.'
-    g.canonical_url = g.base_url  # Ana sayfa için sadece base URL
-    
-    # Get latest 3 blog posts for homepage
-    conn = get_db_connection()
-    posts = conn.execute('''
-        SELECT id, title, slug, excerpt, author, read_time, image_url, created_at
-        FROM posts 
-        WHERE is_published = 1 
-        ORDER BY created_at DESC 
-        LIMIT 3
-    ''').fetchall()
-    conn.close()
-    
-    blog_posts = [dict(post) for post in posts]
-    
-    return render_template('index.html', **template_data, blog_posts=blog_posts)
-
-# Hash route'ları - BUNLARI EKLEYELİM
-@app.route('/#about')
-def about_section():
-    """About section için canonical ana sayfa olmalı"""
-    return redirect(url_for('index'))
-
-@app.route('/#services')
-def services_section():
-    """Services section için canonical ana sayfa olmalı"""
-    return redirect(url_for('index'))
-
-@app.route('/#success')
-def success_section():
-    """Success section için canonical ana sayfa olmalı"""
-    return redirect(url_for('index'))
-
-@app.route('/#industries')
-def industries_section():
-    """Industries section için canonical ana sayfa olmalı"""
-    return redirect(url_for('index'))
-
-@app.route('/#contact')
-def contact_section():
-    """Contact section için canonical ana sayfa olmalı"""
-    return redirect(url_for('index'))
-
-@app.route('/blog')
-def blog_list():
-    """Blog list page"""
-    template_data = get_template_data()
-    
-    # Blog listesi için meta bilgilerini güncelle
-    g.meta_title = 'Blog - AI Automation Insights | Bisonar'
-    g.meta_description = 'Latest insights on AI automation, n8n workflows, and business technology'
-    g.canonical_url = f"{g.base_url}/blog"
-    g.og_type = 'website'
-    
-    conn = get_db_connection()
-    posts = conn.execute('''
-        SELECT id, title, slug, excerpt, author, read_time, image_url, created_at
-        FROM posts 
-        WHERE is_published = 1 
-        ORDER BY created_at DESC
-    ''').fetchall()
-    conn.close()
-    
-    blog_posts = [dict(post) for post in posts]
-    
-    return render_template('blog_list.html', **template_data, blog_posts=blog_posts)
-
-@app.route('/blog/<slug>')
-def blog_detail(slug):
-    """Blog detail page"""
-    template_data = get_template_data()
-    
-    conn = get_db_connection()
-    post = conn.execute('''
-        SELECT id, title, slug, content, excerpt, author, read_time, image_url, created_at
-        FROM posts 
-        WHERE slug = ? AND is_published = 1
-    ''', (slug,)).fetchone()
-    conn.close()
-    
-    if post is None:
-        return "Post not found", 404
-    
-    post_dict = dict(post)
-    post_dict['content_html'] = markdown(post_dict['content'])
-    
-    # Blog detayı için meta bilgilerini güncelle
-    g.meta_title = f"{post_dict['title']} | Bisonar"
-    g.meta_description = post_dict['excerpt']
-    g.canonical_url = f"{g.base_url}/blog/{slug}"
-    g.og_type = 'article'
-    g.og_image = post_dict['image_url']
-    
-    return render_template('blog_detail.html', **template_data, post=post_dict)
-
-# Diğer route'lar aynı kalacak...
-# (admin routes, API endpoints, sitemap, robots.txt, set-language)
-
+# API Routes - bunlar multilingual değil
 @app.route('/api/blog/posts')
 def api_blog_posts():
     """API endpoint to get all blog posts"""
@@ -609,19 +834,38 @@ def sitemap():
                 
             formatted_posts.append(post_dict)
         
-        # SPA sections
-        spa_sections = [
-            {'loc': '', 'priority': '1.0', 'changefreq': 'weekly'},
-            {'loc': '#about', 'priority': '0.8', 'changefreq': 'monthly'},
-            {'loc': '#services', 'priority': '0.9', 'changefreq': 'monthly'},
-            {'loc': '#contact', 'priority': '0.7', 'changefreq': 'monthly'},
+        # Multilingual URL'ler için sitemap
+        multilingual_urls = [
+            {'loc': '', 'priority': '1.0', 'changefreq': 'weekly', 'lang': 'en'},
+            {'loc': '/en', 'priority': '1.0', 'changefreq': 'weekly', 'lang': 'en'},
+            {'loc': '/tr', 'priority': '1.0', 'changefreq': 'weekly', 'lang': 'tr'},
+            {'loc': '/en/blog', 'priority': '0.8', 'changefreq': 'weekly', 'lang': 'en'},
+            {'loc': '/tr/blog', 'priority': '0.8', 'changefreq': 'weekly', 'lang': 'tr'},
+            {'loc': '/en/pricing', 'priority': '0.7', 'changefreq': 'monthly', 'lang': 'en'},
+            {'loc': '/tr/pricing', 'priority': '0.7', 'changefreq': 'monthly', 'lang': 'tr'},
         ]
+        
+        # Blog postlar için multilingual URL'ler
+        for post in formatted_posts:
+            multilingual_urls.append({
+                'loc': f'/en/blog/{post["slug"]}',
+                'lastmod': post['lastmod'],
+                'priority': '0.6',
+                'changefreq': 'monthly',
+                'lang': 'en'
+            })
+            multilingual_urls.append({
+                'loc': f'/tr/blog/{post["slug"]}',
+                'lastmod': post['lastmod'],
+                'priority': '0.6',
+                'changefreq': 'monthly',
+                'lang': 'tr'
+            })
         
         response = render_template(
             'sitemap.xml', 
             base_url=base_url,
-            spa_sections=spa_sections,
-            blog_posts=formatted_posts,  # ← FORMATLANMIŞ postlar
+            urls=multilingual_urls,
             lastmod=datetime.now().strftime('%Y-%m-%d')
         )
         
@@ -631,18 +875,11 @@ def sitemap():
         print(f"Sitemap error: {e}")
         return "Sitemap generation error", 500
 
-
 @app.route('/robots.txt')
 def robots():
     return send_from_directory(app.static_folder, 'robots.txt')
 
-@app.route('/set-language/<lang>')
-def set_language(lang):
-    if lang in ['en', 'tr']:
-        session['language'] = lang
-    return jsonify({'success': True, 'language': lang})
-
-# Admin Routes - BUNLARI EKLE
+# Admin Routes
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
@@ -761,9 +998,6 @@ def admin_toggle_post(post_id):
     conn.close()
     return redirect(url_for('admin_dashboard'))
 
-
-#Ai blog page
-
 # AI Blog Generation Routes
 @app.route('/admin/generate-blog', methods=['POST'])
 @admin_required
@@ -862,7 +1096,6 @@ def generate_blog_with_ai(topic, language='en'):
         import traceback
         traceback.print_exc()
         return None
-    
 
 # ✅ YENİ: Google OAuth callback route'u
 @app.route('/oauth/google/callback')
@@ -918,9 +1151,7 @@ def saas_test():
         }
     })
 
-
-
-# Müşteri Onboarding Routes
+# Müşteri Onboarding Routes (bunlar multilingual değil)
 @app.route('/signup', methods=['GET', 'POST'])
 def customer_signup():
     """Müşteri kayıt sayfası"""
@@ -1138,7 +1369,6 @@ def update_customer_prompt():
     except Exception as e:
         print(f"Prompt update error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-    
 
 # Pricing Management Routes
 @app.route('/pricing-settings')
@@ -1299,8 +1529,7 @@ def ai_settings():
     finally:
         conn.close()
 
-#integrations
-
+# Integrations
 @app.route('/integrations')
 def integration_settings():
     """Entegrasyonlar sayfası"""
@@ -1656,9 +1885,6 @@ def toggle_integration(integration):
         traceback.print_exc()
         return jsonify({'success': False, 'message': f'İşlem başarısız: {str(e)}'})
 
-#integrations finish
-
-
 @app.route('/analytics')
 def analytics():
     """Analitik sayfası"""
@@ -1688,7 +1914,6 @@ def google_calendar_connect():
     )
     
     return redirect(auth_url)
-
 
 # Dashboard route'unu güncelle
 @app.route('/dashboard')
@@ -1739,11 +1964,7 @@ def customer_dashboard():
     finally:
         conn.close()
 
-
-#konuşmalar
-
-# app.py'ye ekle
-
+# Konuşmalar
 @app.route('/customer/conversations')
 def customer_conversations():
     if 'customer_id' not in session:
@@ -1799,7 +2020,6 @@ def customer_conversations():
     return render_template('customer/conversations.html', **sample_conversations)
 
 @app.route('/api/conversations/<int:conversation_id>')
-
 def get_conversation_detail(conversation_id):
     if 'customer_id' not in session:
         return jsonify({'success': False, 'message': 'Oturum bulunamadı'})
@@ -1838,8 +2058,6 @@ def get_conversation_detail(conversation_id):
     }
     
     return jsonify(sample_conversation)
-
-#konuşmalar biril
 
 if __name__ == '__main__':
     import jinja2

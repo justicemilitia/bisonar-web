@@ -159,12 +159,37 @@ body::-webkit-scrollbar-thumb {
     box-shadow: 0 0 0 2px #4640FF;
 }
 
-/* Back to top button styles */
+/* Back to Top Button - DEBUG STYLES */
 #backToTop {
-    transition: all 0.3s ease;
+    position: fixed !important;
+    bottom: 32px !important;
+    right: 32px !important;
+    padding: 12px !important;
+    background: #8B5CF6 !important; /* Mor renk */
+    color: white !important;
+    border-radius: 50% !important;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5) !important;
+    border: 2px solid white !important;
+    cursor: pointer !important;
+    z-index: 10000 !important; /* Çok yüksek z-index */
+    width: 50px !important;
+    height: 50px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s ease !important;
 }
 
-#backToTop.visible {
-    opacity: 1;
-    visibility: visible;
+#backToTop:hover {
+    background: #7C3AED !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 25px rgba(139, 92, 246, 0.6) !important;
 }
+
+/* TEST: Butonu her zaman göster */
+#backToTop.debug-visible {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+

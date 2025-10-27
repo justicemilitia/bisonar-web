@@ -14,7 +14,46 @@
     "hero": {
       "headline": "Empower Your Business with AI Automation.",
       "subheadline": "Bisonar builds intelligent workflows with AI Agents to simplify your operations.",
-      "cta": "Get Started"
+      "cta_primary": "Get Started",
+      "cta_secondary": "Learn More",
+      "features": {
+        "title": "AI-Powered CRM Solution",
+        "subtitle": "Strengthen your customer relationships with AI, automate your sales and accelerate growth.",
+        "feature1": {
+          "title": "Smart Customer Segmentation",
+          "desc": "Automatically segment your customers into behavioral segments with AI and create personalized campaigns."
+        },
+        "feature2": {
+          "title": "Predictive Analytics",
+          "desc": "Predict future sales trends and customer behavior with AI, make proactive decisions."
+        },
+        "feature3": {
+          "title": "AI-Powered Chat",
+          "desc": "Instantly respond to customer questions with 24/7 AI assistants, increase satisfaction."
+        }
+      },
+      "stats": {
+        "sales": "Sales Increase",
+        "time": "Time Savings",
+        "satisfaction": "Customer Satisfaction",
+        "support": "AI Support"
+      },
+      "dashboard": {
+        "title": "Bisonar Dashboard with Complete Control",
+        "feature1": "Real-time Sales Tracking",
+        "feature1_desc": "Real-time sales data, conversion rates and customer interactions",
+        "feature2": "Smart Lead Management",
+        "feature2_desc": "AI-powered lead scoring and automatic prioritization",
+        "feature3": "KPI Dashboard",
+        "feature3_desc": "Customizable KPIs and performance indicators",
+        "feature4": "Multi-Device Support",
+        "feature4_desc": "Seamless experience on desktop, tablet and mobile devices",
+        "user_satisfaction": "User Satisfaction",
+        "efficiency_gain": "Efficiency Gain",
+        "decision_speed": "Decision Speed",
+        "video_fallback": "Your browser does not support the video tag.",
+        "demo_title": "CRM Dashboard Demo"
+      }
     },
     "about": {
       "title": "About Bisonar",
@@ -24,10 +63,22 @@
       "tech": ["n8n", "LangChain", "OpenAI", "Zapier", "Custom ML Models"],
       "teamTitle": "Meet Our Team",
       "team": [
-        { "name": "Alex Johnson", "title": "CEO & Founder" },
-        { "name": "Samantha Lee", "title": "Lead Automation Engineer" },
-        { "name": "David Chen", "title": "AI Specialist" },
-        { "name": "Maria Garcia", "title": "Head of Solutions" }
+        {
+          "name": "Alex Johnson",
+          "title": "CEO & Founder"
+        },
+        {
+          "name": "Samantha Lee",
+          "title": "Lead Automation Engineer"
+        },
+        {
+          "name": "David Chen",
+          "title": "AI Specialist"
+        },
+        {
+          "name": "Maria Garcia",
+          "title": "Head of Solutions"
+        }
       ]
     },
     "services": {
@@ -79,9 +130,15 @@
       "title": "See How Automation Works",
       "subtitle": "Interactive demos of our intelligent workflows in action.",
       "demos": [
-        { "title": "AI Email Reply Bot" },
-        { "title": "Automated Report Generator" },
-        { "title": "CRM Data Sync" }
+        {
+          "title": "AI Email Reply Bot"
+        },
+        {
+          "title": "Automated Report Generator"
+        },
+        {
+          "title": "CRM Data Sync"
+        }
       ],
       "cta": "Play Demo"
     },
@@ -149,7 +206,46 @@
     "hero": {
       "headline": "Yapay Zeka Otomasyonu ile İşinizi Güçlendirin.",
       "subheadline": "Bisonar, operasyonlarınızı basitleştirmek için Yapay Zeka Agentları ile akıllı iş akışları oluşturur.",
-      "cta": "Başlayın"
+      "cta_primary": "Hemen Başla",
+      "cta_secondary": "Daha Fazla Bilgi",
+      "features": {
+        "title": "Yapay Zeka Destekli CRM Çözümü",
+        "subtitle": "Müşteri ilişkilerinizi yapay zeka ile güçlendirin, satışlarınızı otomatikleştirin ve büyümeyi hızlandırın.",
+        "feature1": {
+          "title": "Akıllı Müşteri Segmentasyonu",
+          "desc": "Yapay zeka ile müşterilerinizi davranışlarına göre otomatik segmentlere ayırın ve kişiselleştirilmiş kampanyalar oluşturun."
+        },
+        "feature2": {
+          "title": "Tahmine Dayalı Analiz",
+          "desc": "Gelecekteki satış trendlerini ve müşteri davranışlarını AI ile tahmin edin, proaktif kararlar alın."
+        },
+        "feature3": {
+          "title": "AI Destekli Sohbet",
+          "desc": "7/24 çalışan AI asistanları ile müşteri sorularını anında yanıtlayın, memnuniyeti artırın."
+        }
+      },
+      "stats": {
+        "sales": "Satış Artışı",
+        "time": "Zaman Tasarrufu",
+        "satisfaction": "Müşteri Memnuniyeti",
+        "support": "AI Desteği"
+      },
+      "dashboard": {
+        "title": "Dashboard ile Her Şey Kontrolünüzde",
+        "feature1": "Gerçek Zamanlı Satış Takibi",
+        "feature1_desc": "Anlık satış verileri, dönüşüm oranları ve müşteri etkileşimleri",
+        "feature2": "Akıllı Lead Yönetimi",
+        "feature2_desc": "AI destekli lead skorlama ve otomatik önceliklendirme",
+        "feature3": "KPI Dashboard",
+        "feature3_desc": "Özelleştirilebilir KPI'lar ve performans göstergeleri",
+        "feature4": "Çoklu Cihaz Desteği",
+        "feature4_desc": "Masaüstü, tablet ve mobil cihazlarda sorunsuz deneyim",
+        "user_satisfaction": "Kullanıcı Memnuniyeti",
+        "efficiency_gain": "Verimlilik Artışı",
+        "decision_speed": "Karar Hızı",
+        "video_fallback": "Tarayıcınız video tag'ını desteklemiyor.",
+        "demo_title": "CRM Dashboard Demo"
+      }
     },
     "about": {
       "title": "Bisonar Hakkında",
@@ -159,10 +255,22 @@
       "tech": ["n8n", "LangChain", "OpenAI", "Zapier", "Özel ML Modelleri"],
       "teamTitle": "Ekibimizle Tanışın",
       "team": [
-        { "name": "Alex Johnson", "title": "CEO & Kurucu" },
-        { "name": "Samantha Lee", "title": "Lider Otomasyon Mühendisi" },
-        { "name": "David Chen", "title": "Yapay Zeka Uzmanı" },
-        { "name": "Maria Garcia", "title": "Çözüm Lideri" }
+        {
+          "name": "Alex Johnson",
+          "title": "CEO & Kurucu"
+        },
+        {
+          "name": "Samantha Lee",
+          "title": "Lider Otomasyon Mühendisi"
+        },
+        {
+          "name": "David Chen",
+          "title": "Yapay Zeka Uzmanı"
+        },
+        {
+          "name": "Maria Garcia",
+          "title": "Çözüm Lideri"
+        }
       ]
     },
     "services": {
@@ -214,9 +322,15 @@
       "title": "Otomasyon Nasıl Çalışır?",
       "subtitle": "Akıllı iş akışlarımızın etkileşimli demoları.",
       "demos": [
-        { "title": "Yapay Zeka E-posta Yanıtlama Botu" },
-        { "title": "Otomatik Rapor Oluşturucu" },
-        { "title": "CRM Veri Senkronizasyonu" }
+        {
+          "title": "Yapay Zeka E-posta Yanıtlama Botu"
+        },
+        {
+          "title": "Otomatik Rapor Oluşturucu"
+        },
+        {
+          "title": "CRM Veri Senkronizasyonu"
+        }
       ],
       "cta": "Demoyu Oynat"
     },

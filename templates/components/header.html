@@ -1,5 +1,5 @@
 <header class="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800" 
-style="background: linear-gradient(90deg, #4640FF, #E61577);">
+        style="background: linear-gradient(90deg, #4640FF, #E61577);">
     <nav class="container mx-auto px-4 py-4">
         <div class="flex justify-between items-center">
             
@@ -21,7 +21,7 @@ style="background: linear-gradient(90deg, #4640FF, #E61577);">
                 <a href="/#industries" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
                     {{ t.header.nav.industries }}
                 </a>
-                <a href="/blog" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                <a href="{{ get_url_for_lang(current_lang, 'blog_list') }}" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
                     {{ t.header.nav.blog }}
                 </a>
                 <a href="/#contact" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
@@ -30,18 +30,32 @@ style="background: linear-gradient(90deg, #4640FF, #E61577);">
             </div>
 
             <div class="flex items-center space-x-4">
+                <!-- Tema Değiştirici Butonu -->
+                <button data-theme-toggle class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                </button>
+
                 <!-- Language Switcher -->
-                <div class="flex items-center space-x-2">
-                    <button onclick="switchLanguage('en')" class="px-2 py-1 text-sm rounded {% if current_lang == 'en' %}bg-purple-600 text-white{% else %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400{% endif %}">
+                <div class="flex items-center space-x-2 lang-switcher">
+                    <button data-lang="en" 
+                            class="px-2 py-1 text-sm rounded transition-all duration-200 {% if current_lang == 'en' %}bg-purple-600 text-white{% else %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700{% endif %}">
                         EN
                     </button>
-                    <button onclick="switchLanguage('tr')" class="px-2 py-1 text-sm rounded {% if current_lang == 'tr' %}bg-purple-600 text-white{% else %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400{% endif %}">
+                    <button data-lang="tr" 
+                            class="px-2 py-1 text-sm rounded transition-all duration-200 {% if current_lang == 'tr' %}bg-purple-600 text-white{% else %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700{% endif %}">
                         TR
                     </button>
                 </div>
 
                 <!-- CTA Button -->
-               
+                <a href="/#contact" class="gradient-button-niotech text-white font-bold py-2 px-6 rounded-full text-sm hidden md:inline-block transition-transform hover:scale-105">
+                    {{ t.header.cta }}
+                </a>
 
                 <!-- Mobile Menu Button -->
                 <button id="mobileMenuButton" class="md:hidden p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
@@ -53,40 +67,55 @@ style="background: linear-gradient(90deg, #4640FF, #E61577);">
         </div>
 
         <!-- Mobile Menu -->
-            <div id="mobileMenu" class="hidden md:hidden mt-4 space-y-4 pb-4">
-            <a href="/#about" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+        <div id="mobileMenu" class="hidden md:hidden mt-4 space-y-4 pb-4">
+            <a href="/#about" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors py-2">
                 {{ t.header.nav.about }}
             </a>
-            <a href="/#services" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            <a href="/#services" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors py-2">
                 {{ t.header.nav.services }}
             </a>
-            <a href="/#success" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            <a href="/#success" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors py-2">
                 {{ t.header.nav.success }}
             </a>
-            <a href="/#industries" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            <a href="/#industries" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors py-2">
                 {{ t.header.nav.industries }}
             </a>
-            <a href="/blog" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            <a href="{{ get_url_for_lang(current_lang, 'blog_list') }}" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors py-2">
                 {{ t.header.nav.blog }}
             </a>
-            <a href="/#contact" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+            <a href="/#contact" class="block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors py-2">
                 {{ t.header.nav.contact }}
             </a>
-            <a href="/#contact" class="gradient-button-niotech text-white font-bold py-2 px-6 rounded-full text-sm inline-block mt-4">
+            
+            <!-- Mobile CTA Button -->
+            <a href="/#contact" class="gradient-button-niotech text-white font-bold py-3 px-6 rounded-full text-sm inline-block w-full text-center mt-4 transition-transform hover:scale-105">
                 {{ t.header.cta }}
             </a>
+            
+            <!-- Mobile Tema Değiştirici -->
+            <div class="flex justify-center pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button data-theme-toggle class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <svg class="w-4 h-4 text-gray-600 dark:text-gray-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <svg class="w-4 h-4 text-gray-600 dark:text-gray-400 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Tema / Theme</span>
+                </button>
+            </div>
+
+            <!-- Mobile Language Switcher -->
+            <div class="flex justify-center space-x-4 pt-4">
+                <button data-lang="en" 
+                        class="px-3 py-2 text-sm rounded transition-all duration-200 {% if current_lang == 'en' %}bg-purple-600 text-white{% else %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700{% endif %}">
+                    🇺🇸 English
+                </button>
+                <button data-lang="tr" 
+                        class="px-3 py-2 text-sm rounded transition-all duration-200 {% if current_lang == 'tr' %}bg-purple-600 text-white{% else %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700{% endif %}">
+                    🇹🇷 Türkçe
+                </button>
+            </div>
         </div>
     </nav>
 </header>
-
-<script>
-function switchLanguage(lang) {
-    fetch(`/set-language/${lang}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            }
-        });
-}
-</script>

@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-    <div class="container mx-auto px-6 max-w-4xl">
+    <div class="container mx-auto px-6 max-w-6xl">
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
@@ -43,7 +43,7 @@
         </div>
         {% endif %}
 
-        <!-- Form - DEĞİŞMEDİ -->
+        <!-- Form -->
         <form method="POST" enctype="multipart/form-data" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
             <!-- Title -->
             <div>
@@ -77,15 +77,95 @@
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Brief description for preview</p>
             </div>
 
-            <!-- Content -->
+            <!-- Content Editor -->
             <div>
-                <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Content *
-                </label>
-                <textarea id="content" name="content" rows="15"
-                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white font-mono text-sm"
-                          required>{{ post.content if post }}</textarea>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Markdown supported</p>
+                <div class="flex justify-between items-center mb-2">
+                    <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Content *
+                    </label>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="togglePreview()" 
+                                class="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            Preview
+                        </button>
+                        <button type="button" onclick="insertMarkdown('bold')" 
+                                class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" onclick="insertMarkdown('italic')" 
+                                class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            <em>I</em>
+                        </button>
+                        <button type="button" onclick="insertMarkdown('link')" 
+                                class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            🔗
+                        </button>
+                        <button type="button" onclick="insertMarkdown('image')" 
+                                class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            🖼️
+                        </button>
+                        <button type="button" onclick="insertMarkdown('code')" 
+                                class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            { }
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Editor Container -->
+                <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+                    <!-- Toolbar -->
+                    <div class="bg-gray-100 dark:bg-gray-700 px-4 py-2 border-b border-gray-300 dark:border-gray-600 flex flex-wrap gap-2">
+                        <button type="button" onclick="formatText('bold')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" onclick="formatText('italic')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
+                            <em>I</em>
+                        </button>
+                        <button type="button" onclick="formatText('heading1')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
+                            H1
+                        </button>
+                        <button type="button" onclick="formatText('heading2')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
+                            H2
+                        </button>
+                        <button type="button" onclick="formatText('blockquote')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
+                            ❝
+                        </button>
+                        <button type="button" onclick="formatText('code')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
+                            { }
+                        </button>
+                        <button type="button" onclick="formatText('link')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
+                            🔗
+                        </button>
+                        <button type="button" onclick="formatText('image')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
+                            🖼️
+                        </button>
+                        <button type="button" onclick="formatText('ul')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
+                            • List
+                        </button>
+                        <button type="button" onclick="formatText('ol')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
+                            1. List
+                        </button>
+                    </div>
+                    
+                    <!-- Editor and Preview Panes -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4" id="editor-container">
+                        <!-- Editor Pane -->
+                        <div class="lg:col-span-1">
+                            <textarea id="content" name="content" rows="20"
+                                      class="w-full h-full px-3 py-2 border-0 focus:outline-none focus:ring-0 dark:bg-gray-800 dark:text-white font-mono text-sm resize-none"
+                                      placeholder="Write your content in Markdown..."
+                                      required>{{ post.content if post }}</textarea>
+                        </div>
+                        
+                        <!-- Preview Pane -->
+                        <div class="lg:col-span-1 hidden" id="preview-pane">
+                            <div class="prose dark:prose-invert max-w-none bg-white dark:bg-gray-800 p-4 rounded border">
+                                <div id="preview-content"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Markdown supported. Use the toolbar for quick formatting.</p>
             </div>
 
             <!-- Author & Read Time -->
@@ -148,8 +228,11 @@
     </div>
 </div>
 
+<!-- Include Marked.js for Markdown parsing -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 <script>
-// Auto-generate slug from title - DEĞİŞMEDİ
+// Auto-generate slug from title
 document.getElementById('title').addEventListener('input', function() {
     const slugInput = document.getElementById('slug');
     if (!slugInput.value) {
@@ -162,7 +245,79 @@ document.getElementById('title').addEventListener('input', function() {
     }
 });
 
-// AI Generation Function - BASİT VE ÇALIŞAN VERSİYON
+// Editor Functions
+function formatText(type) {
+    const textarea = document.getElementById('content');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    
+    let formattedText = '';
+    
+    switch(type) {
+        case 'bold':
+            formattedText = `**${selectedText}**`;
+            break;
+        case 'italic':
+            formattedText = `*${selectedText}*`;
+            break;
+        case 'heading1':
+            formattedText = `# ${selectedText}`;
+            break;
+        case 'heading2':
+            formattedText = `## ${selectedText}`;
+            break;
+        case 'blockquote':
+            formattedText = `> ${selectedText}`;
+            break;
+        case 'code':
+            formattedText = `\`${selectedText}\``;
+            break;
+        case 'link':
+            formattedText = `[${selectedText}](https://)`;
+            break;
+        case 'image':
+            formattedText = `![${selectedText}](https://)`;
+            break;
+        case 'ul':
+            formattedText = selectedText.split('\n').map(line => `- ${line}`).join('\n');
+            break;
+        case 'ol':
+            formattedText = selectedText.split('\n').map((line, index) => `${index + 1}. ${line}`).join('\n');
+            break;
+    }
+    
+    textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+    textarea.focus();
+    updatePreview();
+}
+
+function togglePreview() {
+    const previewPane = document.getElementById('preview-pane');
+    const editorContainer = document.getElementById('editor-container');
+    
+    if (previewPane.classList.contains('hidden')) {
+        previewPane.classList.remove('hidden');
+        editorContainer.classList.remove('lg:grid-cols-2');
+        editorContainer.classList.add('lg:grid-cols-1');
+        updatePreview();
+    } else {
+        previewPane.classList.add('hidden');
+        editorContainer.classList.remove('lg:grid-cols-1');
+        editorContainer.classList.add('lg:grid-cols-2');
+    }
+}
+
+function updatePreview() {
+    const content = document.getElementById('content').value;
+    const previewContent = document.getElementById('preview-content');
+    previewContent.innerHTML = marked.parse(content);
+}
+
+// Auto-update preview when typing
+document.getElementById('content').addEventListener('input', updatePreview);
+
+// AI Generation Function
 async function generateWithAI() {
     const topicInput = document.getElementById('ai-topic');
     const languageSelect = document.getElementById('ai-language');
@@ -182,8 +337,6 @@ async function generateWithAI() {
     errorElement.classList.add('hidden');
     
     try {
-        console.log('🔄 Sending AI request...', { topic, language });
-        
         const response = await fetch('/admin/generate-blog', {
             method: 'POST',
             headers: {
@@ -195,23 +348,12 @@ async function generateWithAI() {
             })
         });
         
-        console.log('📥 Response status:', response.status);
-        console.log('📥 Response ok:', response.ok);
-        
         const data = await response.json();
-        console.log('📥 Full response data:', data);
         
         if (response.ok) {
             if (data.error) {
-                console.log('❌ Backend error:', data.error);
                 throw new Error(data.error);
             } else {
-                console.log('✅ AI data received:', {
-                    title: data.title,
-                    content_length: data.content?.length,
-                    success: data.success
-                });
-                
                 // Fill form with AI generated content
                 document.getElementById('title').value = data.title || '';
                 document.getElementById('slug').value = data.slug || data.title
@@ -224,22 +366,21 @@ async function generateWithAI() {
                 document.getElementById('read_time').value = data.read_time || '5 min read';
                 document.getElementById('author').value = data.author || 'Bisonar AI';
                 
+                // Update preview
+                updatePreview();
+                
                 // Show success message
                 errorElement.textContent = '✅ AI içeriği başarıyla oluşturuldu!';
                 errorElement.classList.remove('hidden');
                 errorElement.classList.remove('text-red-600');
                 errorElement.classList.add('text-green-600');
-                
-                console.log('🎉 Form filled successfully');
             }
             
         } else {
-            console.log('❌ HTTP error:', data);
             throw new Error(data.error || `HTTP ${response.status} - AI servisi şu anda müsait değil`);
         }
         
     } catch (error) {
-        console.error('❌ AI generation error:', error);
         errorElement.textContent = 'Hata: ' + error.message;
         errorElement.classList.remove('hidden');
         errorElement.classList.remove('text-green-600');
@@ -248,5 +389,55 @@ async function generateWithAI() {
         loadingElement.classList.add('hidden');
     }
 }
+
+// Initialize preview on load
+document.addEventListener('DOMContentLoaded', function() {
+    updatePreview();
+});
 </script>
+
+<style>
+.prose {
+    max-width: none;
+}
+.prose h1 {
+    font-size: 2em;
+    font-weight: bold;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+.prose h2 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+.prose blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1em;
+    font-style: italic;
+    margin: 1em 0;
+}
+.prose code {
+    background-color: #f3f4f6;
+    padding: 0.125em 0.25em;
+    border-radius: 0.25em;
+    font-family: monospace;
+}
+.prose pre {
+    background-color: #1f2937;
+    color: white;
+    padding: 1em;
+    border-radius: 0.5em;
+    overflow-x: auto;
+}
+.prose ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+}
+.prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+}
+</style>
 {% endblock %}

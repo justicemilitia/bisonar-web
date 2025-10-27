@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ current_lang }}" class="scroll-smooth dark" data-default-lang="{{ current_lang }}">
+<html lang="{{ current_lang }}" class="scroll-smooth">
 <head>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-921FP71YY9"></script>
@@ -13,7 +13,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- CANONICAL URL - TEK VE SADECE BURADA -->
+    <!-- CANONICAL URL -->
     <link rel="canonical" href="{{ canonical_url }}">
     
     <!-- Multi-language SEO -->
@@ -31,7 +31,7 @@
     <meta property="og:title" content="{{ meta_title }}">
     <meta property="og:description" content="{{ meta_description }}">
     <meta property="og:type" content="{{ og_type }}">
-    <meta property="og:url" content="{{ canonical_url }}"> <!-- canonical_url kullan -->
+    <meta property="og:url" content="{{ canonical_url }}">
     <meta property="og:image" content="{{ og_image }}">
     
     <!-- Structured Data -->
@@ -55,18 +55,32 @@
     <!-- CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class' }
+        tailwind.config = { 
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/chat-bot.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat-bot.css') }}">
 </head>
-<body class="leading-relaxed overflow-x-hidden">
+<body class="leading-relaxed overflow-x-hidden bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
     {% block content %}{% endblock %}
     
-    <!-- CHATBOT WIDGET -->
+    <!-- CHATBOT WIDGET - SOL ALT KÖŞE -->
     <div class="chatbot-widget">
         <button class="chatbot-button" onclick="toggleChatbot()">🤖</button>
         <div class="chatbot-container" id="chatbotContainer">
@@ -93,8 +107,100 @@
         </div>
     </div>
 
-    <script src="/static/js/main.js"></script>
-    <script src="/static/js/chat-bot.js"></script>
+    <!-- Back to Top Button - SAĞ ALT KÖŞE -->
+    <button id="backToTop" class="hidden fixed bottom-8 right-8 p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg transition-all duration-300 z-40 backdrop-blur-sm border border-purple-400/30">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat-bot.js') }}"></script>
+
+        <script>
+    // Ana sayfa için özel back to top fonksiyonu
+    function handleBackToTop() {
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        if (!backToTopBtn) {
+            console.log('❌ Back to Top button not found');
+            return;
+        }
+
+        // Scroll event listener
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.remove('hidden');
+            } else {
+                backToTopBtn.classList.add('hidden');
+            }
+        });
+
+        // Click event listener - ANA SAYFA İÇİN ÖZEL
+        backToTopBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('🎯 Back to Top clicked');
+            console.log('📍 Current path:', window.location.pathname);
+            console.log('📍 Current hash:', window.location.hash);
+            
+            // ANA SAYFA MI KONTROL ET
+            const isHomePage = window.location.pathname === '/' || 
+                              window.location.pathname === '/en' || 
+                              window.location.pathname === '/tr' ||
+                              window.location.pathname === '';
+            
+            if (isHomePage) {
+                console.log('🏠 Home page detected - special handling');
+                
+                // 1. Önce hash'i temizle
+                if (window.location.hash) {
+                    window.history.replaceState(null, null, window.location.pathname);
+                }
+                
+                // 2. Scroll yapmadan önce küçük bir gecikme
+                setTimeout(() => {
+                    // 3. Tüm scroll methodlarını dene
+                    const scrollOptions = { top: 0, behavior: 'smooth' };
+                    
+                    window.scrollTo(scrollOptions);
+                    document.documentElement.scrollTo(scrollOptions);
+                    document.body.scrollTo(scrollOptions);
+                    
+                    // 4. Fallback: instant scroll
+                    setTimeout(() => {
+                        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                        if (currentScroll > 50) {
+                            console.log('🔄 Using fallback instant scroll');
+                            window.scrollTo(0, 0);
+                            document.documentElement.scrollTop = 0;
+                            document.body.scrollTop = 0;
+                        }
+                    }, 200);
+                    
+                }, 50);
+                
+            } else {
+                // BLOG SAYFASI - normal scroll
+                console.log('📄 Blog page - normal scroll');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+        
+        console.log('✅ Back to Top initialized for home page');
+    }
+
+    // DOM yüklendiğinde çalıştır
+    document.addEventListener('DOMContentLoaded', handleBackToTop);
+    
+    // Eğer DOM zaten yüklendiyse
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', handleBackToTop);
+    } else {
+        handleBackToTop();
+    }
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
