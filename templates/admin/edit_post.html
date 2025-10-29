@@ -45,130 +45,119 @@
 
         <!-- Form -->
         <form method="POST" enctype="multipart/form-data" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
-            <!-- Title -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <!-- Language Selection -->
             <div>
-                <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Title *
+                <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Dil / Language *
                 </label>
-                <input type="text" id="title" name="title" value="{{ post.title if post }}" 
-                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                       required>
+                <select name="language" id="language" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" required>
+                    <option value="en" {% if post and post.language == 'en' %}selected{% endif %}>English</option>
+                    <option value="tr" {% if post and post.language == 'tr' %}selected{% endif %}>Türkçe</option>
+                </select>
             </div>
 
-            <!-- Slug -->
-            <div>
-                <label for="slug" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Slug *
-                </label>
-                <input type="text" id="slug" name="slug" value="{{ post.slug if post }}" 
-                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                       required>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">URL-friendly version of the title</p>
-            </div>
-
-            <!-- Excerpt -->
-            <div>
-                <label for="excerpt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Excerpt *
-                </label>
-                <textarea id="excerpt" name="excerpt" rows="3"
-                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                          required>{{ post.excerpt if post }}</textarea>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Brief description for preview</p>
-            </div>
-
-            <!-- Content Editor -->
-            <div>
-                <div class="flex justify-between items-center mb-2">
-                    <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Content *
-                    </label>
-                    <div class="flex space-x-2">
-                        <button type="button" onclick="togglePreview()" 
-                                class="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                            Preview
-                        </button>
-                        <button type="button" onclick="insertMarkdown('bold')" 
-                                class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                            <strong>B</strong>
-                        </button>
-                        <button type="button" onclick="insertMarkdown('italic')" 
-                                class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                            <em>I</em>
-                        </button>
-                        <button type="button" onclick="insertMarkdown('link')" 
-                                class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                            🔗
-                        </button>
-                        <button type="button" onclick="insertMarkdown('image')" 
-                                class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                            🖼️
-                        </button>
-                        <button type="button" onclick="insertMarkdown('code')" 
-                                class="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                            { }
-                        </button>
-                    </div>
-                </div>
+            <!-- English Content Section -->
+            <div class="border-l-4 border-blue-500 pl-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded">
+                <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">🇺🇸 English Content</h3>
                 
-                <!-- Editor Container -->
-                <div class="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
-                    <!-- Toolbar -->
-                    <div class="bg-gray-100 dark:bg-gray-700 px-4 py-2 border-b border-gray-300 dark:border-gray-600 flex flex-wrap gap-2">
-                        <button type="button" onclick="formatText('bold')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                            <strong>B</strong>
-                        </button>
-                        <button type="button" onclick="formatText('italic')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                            <em>I</em>
-                        </button>
-                        <button type="button" onclick="formatText('heading1')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                            H1
-                        </button>
-                        <button type="button" onclick="formatText('heading2')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                            H2
-                        </button>
-                        <button type="button" onclick="formatText('blockquote')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                            ❝
-                        </button>
-                        <button type="button" onclick="formatText('code')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                            { }
-                        </button>
-                        <button type="button" onclick="formatText('link')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                            🔗
-                        </button>
-                        <button type="button" onclick="formatText('image')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                            🖼️
-                        </button>
-                        <button type="button" onclick="formatText('ul')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                            • List
-                        </button>
-                        <button type="button" onclick="formatText('ol')" class="px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                            1. List
-                        </button>
-                    </div>
-                    
-                    <!-- Editor and Preview Panes -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4" id="editor-container">
-                        <!-- Editor Pane -->
-                        <div class="lg:col-span-1">
-                            <textarea id="content" name="content" rows="20"
-                                      class="w-full h-full px-3 py-2 border-0 focus:outline-none focus:ring-0 dark:bg-gray-800 dark:text-white font-mono text-sm resize-none"
-                                      placeholder="Write your content in Markdown..."
-                                      required>{{ post.content if post }}</textarea>
-                        </div>
-                        
-                        <!-- Preview Pane -->
-                        <div class="lg:col-span-1 hidden" id="preview-pane">
-                            <div class="prose dark:prose-invert max-w-none bg-white dark:bg-gray-800 p-4 rounded border">
-                                <div id="preview-content"></div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- English Title -->
+                <div class="mb-4">
+                    <label for="title_en" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        English Title *
+                    </label>
+                    <input type="text" id="title_en" name="title_en" 
+                           value="{{ post.title_en if post }}" 
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                           required>
                 </div>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Markdown supported. Use the toolbar for quick formatting.</p>
+
+                <!-- English Slug -->
+                <div class="mb-4">
+                    <label for="slug_en" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        English Slug *
+                    </label>
+                    <input type="text" id="slug_en" name="slug_en" 
+                           value="{{ post.slug_en if post }}" 
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                           required>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">URL-friendly version for English</p>
+                </div>
+
+                <!-- English Excerpt -->
+                <div class="mb-4">
+                    <label for="excerpt_en" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        English Excerpt *
+                    </label>
+                    <textarea id="excerpt_en" name="excerpt_en" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                              required>{{ post.excerpt_en if post }}</textarea>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Brief description for English preview</p>
+                </div>
+
+                <!-- English Content -->
+                <div class="mb-4">
+                    <label for="content_en" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        English Content *
+                    </label>
+                    <textarea id="content_en" name="content_en" rows="10"
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white font-mono text-sm"
+                              placeholder="Write your English content in Markdown..."
+                              required>{{ post.content_en if post }}</textarea>
+                </div>
             </div>
 
-            <!-- Author & Read Time -->
+            <!-- Turkish Content Section -->
+            <div class="border-l-4 border-red-500 pl-4 bg-red-50 dark:bg-red-900/20 p-4 rounded">
+                <h3 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-4">🇹🇷 Türkçe İçerik</h3>
+                
+                <!-- Turkish Title -->
+                <div class="mb-4">
+                    <label for="title_tr" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Türkçe Başlık *
+                    </label>
+                    <input type="text" id="title_tr" name="title_tr" 
+                           value="{{ post.title_tr if post }}" 
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                           required>
+                </div>
+
+                <!-- Turkish Slug -->
+                <div class="mb-4">
+                    <label for="slug_tr" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Türkçe Slug *
+                    </label>
+                    <input type="text" id="slug_tr" name="slug_tr" 
+                           value="{{ post.slug_tr if post }}" 
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                           required>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">URL-friendly version for Turkish</p>
+                </div>
+
+                <!-- Turkish Excerpt -->
+                <div class="mb-4">
+                    <label for="excerpt_tr" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Türkçe Özet *
+                    </label>
+                    <textarea id="excerpt_tr" name="excerpt_tr" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                              required>{{ post.excerpt_tr if post }}</textarea>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Türkçe önizleme için kısa açıklama</p>
+                </div>
+
+                <!-- Turkish Content -->
+                <div class="mb-4">
+                    <label for="content_tr" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Türkçe İçerik *
+                    </label>
+                    <textarea id="content_tr" name="content_tr" rows="10"
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white font-mono text-sm"
+                              placeholder="Türkçe içeriğinizi Markdown formatında yazın..."
+                              required>{{ post.content_tr if post }}</textarea>
+                </div>
+            </div>
+
+            <!-- Common Fields -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="author" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -228,96 +217,44 @@
     </div>
 </div>
 
-<!-- Include Marked.js for Markdown parsing -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
 <script>
-// Auto-generate slug from title
-document.getElementById('title').addEventListener('input', function() {
-    const slugInput = document.getElementById('slug');
+// Auto-generate slugs from titles
+document.getElementById('title_en').addEventListener('input', function() {
+    const slugInput = document.getElementById('slug_en');
     if (!slugInput.value) {
         const slug = this.value
             .toLowerCase()
             .replace(/[^a-z0-9 -]/g, '')
             .replace(/\s+/g, '-')
-            .replace(/-+/g, '-');
+            .replace(/-+/g, '-')
+            .replace(/^-+/, '')
+            .replace(/-+$/, '');
         slugInput.value = slug;
     }
 });
 
-// Editor Functions
-function formatText(type) {
-    const textarea = document.getElementById('content');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    
-    let formattedText = '';
-    
-    switch(type) {
-        case 'bold':
-            formattedText = `**${selectedText}**`;
-            break;
-        case 'italic':
-            formattedText = `*${selectedText}*`;
-            break;
-        case 'heading1':
-            formattedText = `# ${selectedText}`;
-            break;
-        case 'heading2':
-            formattedText = `## ${selectedText}`;
-            break;
-        case 'blockquote':
-            formattedText = `> ${selectedText}`;
-            break;
-        case 'code':
-            formattedText = `\`${selectedText}\``;
-            break;
-        case 'link':
-            formattedText = `[${selectedText}](https://)`;
-            break;
-        case 'image':
-            formattedText = `![${selectedText}](https://)`;
-            break;
-        case 'ul':
-            formattedText = selectedText.split('\n').map(line => `- ${line}`).join('\n');
-            break;
-        case 'ol':
-            formattedText = selectedText.split('\n').map((line, index) => `${index + 1}. ${line}`).join('\n');
-            break;
+document.getElementById('title_tr').addEventListener('input', function() {
+    const slugInput = document.getElementById('slug_tr');
+    if (!slugInput.value) {
+        // Turkish character handling - improved version
+        const slug = this.value
+            .toLowerCase()
+            .replace(/[^a-z0-9çğıöşü -]/g, '')  // Türkçe karakterlere izin ver
+            .replace(/ç/g, 'c')
+            .replace(/ğ/g, 'g')
+            .replace(/ı/g, 'i')
+            .replace(/ö/g, 'o')
+            .replace(/ş/g, 's')
+            .replace(/ü/g, 'u')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-+/, '')   // Baştaki tireleri temizle
+            .replace(/-+$/, '');  // Sondaki tireleri temizle
+        slugInput.value = slug;
     }
-    
-    textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
-    textarea.focus();
-    updatePreview();
-}
+});
 
-function togglePreview() {
-    const previewPane = document.getElementById('preview-pane');
-    const editorContainer = document.getElementById('editor-container');
-    
-    if (previewPane.classList.contains('hidden')) {
-        previewPane.classList.remove('hidden');
-        editorContainer.classList.remove('lg:grid-cols-2');
-        editorContainer.classList.add('lg:grid-cols-1');
-        updatePreview();
-    } else {
-        previewPane.classList.add('hidden');
-        editorContainer.classList.remove('lg:grid-cols-1');
-        editorContainer.classList.add('lg:grid-cols-2');
-    }
-}
-
-function updatePreview() {
-    const content = document.getElementById('content').value;
-    const previewContent = document.getElementById('preview-content');
-    previewContent.innerHTML = marked.parse(content);
-}
-
-// Auto-update preview when typing
-document.getElementById('content').addEventListener('input', updatePreview);
-
-// AI Generation Function
+// AI Generation Function - GÜNCELLENMİŞ
 async function generateWithAI() {
     const topicInput = document.getElementById('ai-topic');
     const languageSelect = document.getElementById('ai-language');
@@ -354,20 +291,68 @@ async function generateWithAI() {
             if (data.error) {
                 throw new Error(data.error);
             } else {
-                // Fill form with AI generated content
-                document.getElementById('title').value = data.title || '';
-                document.getElementById('slug').value = data.slug || data.title
-                    .toLowerCase()
-                    .replace(/[^a-z0-9 -]/g, '')
-                    .replace(/\s+/g, '-')
-                    .replace(/-+/g, '-');
-                document.getElementById('excerpt').value = data.excerpt || '';
-                document.getElementById('content').value = data.content || '';
+                // Fill form with AI generated content based on language
+                if (language === 'en') {
+                    document.getElementById('title_en').value = data.title || '';
+                    document.getElementById('slug_en').value = data.slug || data.title
+                        .toLowerCase()
+                        .replace(/[^a-z0-9 -]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+/g, '-')
+                        .replace(/^-+/, '')
+                        .replace(/-+$/, '');
+                    document.getElementById('excerpt_en').value = data.excerpt || '';
+                    document.getElementById('content_en').value = data.content || '';
+                    
+                    // Auto-translate title for Turkish with proper slug
+                    document.getElementById('title_tr').value = data.title + ' (TR)';
+                    const turkishSlug = (data.slug || data.title)
+                        .toLowerCase()
+                        .replace(/[^a-z0-9çğıöşü -]/g, '')
+                        .replace(/ç/g, 'c')
+                        .replace(/ğ/g, 'g')
+                        .replace(/ı/g, 'i')
+                        .replace(/ö/g, 'o')
+                        .replace(/ş/g, 's')
+                        .replace(/ü/g, 'u')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+/g, '-')
+                        .replace(/^-+/, '')
+                        .replace(/-+$/, '');
+                    document.getElementById('slug_tr').value = turkishSlug + '-tr';
+                } else {
+                    document.getElementById('title_tr').value = data.title || '';
+                    const turkishSlug = (data.slug || data.title)
+                        .toLowerCase()
+                        .replace(/[^a-z0-9çğıöşü -]/g, '')
+                        .replace(/ç/g, 'c')
+                        .replace(/ğ/g, 'g')
+                        .replace(/ı/g, 'i')
+                        .replace(/ö/g, 'o')
+                        .replace(/ş/g, 's')
+                        .replace(/ü/g, 'u')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+/g, '-')
+                        .replace(/^-+/, '')
+                        .replace(/-+$/, '');
+                    document.getElementById('slug_tr').value = turkishSlug;
+                    document.getElementById('excerpt_tr').value = data.excerpt || '';
+                    document.getElementById('content_tr').value = data.content || '';
+                    
+                    // Auto-translate title for English
+                    document.getElementById('title_en').value = data.title + ' (EN)';
+                    document.getElementById('slug_en').value = (data.slug || data.title
+                        .toLowerCase()
+                        .replace(/[^a-z0-9 -]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+/g, '-')
+                        .replace(/^-+/, '')
+                        .replace(/-+$/, '')) + '-en';
+                }
+                
                 document.getElementById('read_time').value = data.read_time || '5 min read';
                 document.getElementById('author').value = data.author || 'Bisonar AI';
-                
-                // Update preview
-                updatePreview();
+                document.getElementById('language').value = language;
                 
                 // Show success message
                 errorElement.textContent = '✅ AI içeriği başarıyla oluşturuldu!';
@@ -390,54 +375,27 @@ async function generateWithAI() {
     }
 }
 
-// Initialize preview on load
+// Auto-fill both languages when one title is entered
+function setupTitleSync() {
+    const titleEn = document.getElementById('title_en');
+    const titleTr = document.getElementById('title_tr');
+    
+    titleEn.addEventListener('blur', function() {
+        if (this.value && !titleTr.value) {
+            titleTr.value = this.value + ' (Türkçe)';
+        }
+    });
+    
+    titleTr.addEventListener('blur', function() {
+        if (this.value && !titleEn.value) {
+            titleEn.value = this.value + ' (English)';
+        }
+    });
+}
+
+// Initialize on load
 document.addEventListener('DOMContentLoaded', function() {
-    updatePreview();
+    setupTitleSync();
 });
 </script>
-
-<style>
-.prose {
-    max-width: none;
-}
-.prose h1 {
-    font-size: 2em;
-    font-weight: bold;
-    margin-top: 1em;
-    margin-bottom: 0.5em;
-}
-.prose h2 {
-    font-size: 1.5em;
-    font-weight: bold;
-    margin-top: 1em;
-    margin-bottom: 0.5em;
-}
-.prose blockquote {
-    border-left: 4px solid #e5e7eb;
-    padding-left: 1em;
-    font-style: italic;
-    margin: 1em 0;
-}
-.prose code {
-    background-color: #f3f4f6;
-    padding: 0.125em 0.25em;
-    border-radius: 0.25em;
-    font-family: monospace;
-}
-.prose pre {
-    background-color: #1f2937;
-    color: white;
-    padding: 1em;
-    border-radius: 0.5em;
-    overflow-x: auto;
-}
-.prose ul {
-    list-style-type: disc;
-    padding-left: 1.5em;
-}
-.prose ol {
-    list-style-type: decimal;
-    padding-left: 1.5em;
-}
-</style>
 {% endblock %}

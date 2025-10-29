@@ -16,7 +16,8 @@
                     <div class="text-sm text-gray-500 dark:text-slate-400 mb-4">
                         <span>By {{ post.author }}</span> • <span>{{ post.read_time }}</span>
                     </div>
-                    <a href="{{ url_for('blog_detail', slug=post.slug) }}" class="text-[#8A85FF] hover:text-[#4640FF] dark:hover:text-white font-semibold self-start group/link transition-all duration-300">
+                    <!-- DEĞİŞTİ: url_for yerine get_url_for_lang kullan -->
+                    <a href="{{ get_url_for_lang(current_lang, 'blog_detail', slug=post.slug) }}" class="text-[#8A85FF] hover:text-[#4640FF] dark:hover:text-white font-semibold self-start group/link transition-all duration-300">
                         {{ t.blog.cta }} <span class="inline-block transform group-hover/link:translate-x-1 transition-transform">→</span>
                     </a>
                 </div>
@@ -24,7 +25,8 @@
             {% endfor %}
         </div>
         <div class="text-center mt-12">
-            <a href="{{ url_for('blog_list') }}" class="bg-gradient-to-r from-[#4640FF] to-[#8E45FF] text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 transform hover:-translate-y-1">
+            <!-- DEĞİŞTİ: url_for yerine get_url_for_lang kullan -->
+            <a href="{{ get_url_for_lang(current_lang, 'blog_list') }}" class="bg-gradient-to-r from-[#4640FF] to-[#8E45FF] text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 transform hover:-translate-y-1">
                 View All Posts
             </a>
         </div>

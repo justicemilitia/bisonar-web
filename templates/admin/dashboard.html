@@ -76,7 +76,15 @@
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                {{ post.created_at[:10] }}
+                                {% if post.created_at %}
+                                    {% if post.created_at is string %}
+                                        {{ post.created_at[:10] }}
+                                    {% else %}
+                                        {{ post.created_at.strftime('%Y-%m-%d') }}
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                 <a href="{{ url_for('blog_detail', slug=post.slug) }}" target="_blank" class="text-blue-600 hover:text-blue-900">View</a>

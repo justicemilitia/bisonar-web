@@ -1,40 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">  <!-- BU SATIRI EKLEYİN -->
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
     
-    <!-- Ana Sayfa ve SPA Sections -->
-    {% for section in spa_sections %}
+    <!-- Ana Sayfa ve Dil URL'leri -->
     <url>
-        <loc>{{ base_url }}/{{ section.loc if section.loc != '' else '' }}</loc>
-        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/{{ section.loc if section.loc != '' else '' }}?lang=tr"/>
-        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/{{ section.loc if section.loc != '' else '' }}?lang=en"/>
-        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/{{ section.loc if section.loc != '' else '' }}"/>
+        <loc>{{ base_url }}/</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/tr"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/en"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/"/>
         <lastmod>{{ lastmod }}</lastmod>
-        <changefreq>{{ section.changefreq }}</changefreq>
-        <priority>{{ section.priority }}</priority>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
     </url>
-    {% endfor %}
+    
+    <url>
+        <loc>{{ base_url }}/en</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/tr"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/en"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/"/>
+        <lastmod>{{ lastmod }}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+    </url>
+    
+    <url>
+        <loc>{{ base_url }}/tr</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/tr"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/en"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/"/>
+        <lastmod>{{ lastmod }}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+    </url>
     
     <!-- Blog Ana Sayfa -->
     <url>
-        <loc>{{ base_url }}/blog</loc>
-        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/blog?lang=tr"/>
-        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/blog?lang=en"/>
+        <loc>{{ base_url }}/en/blog</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/tr/blog"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/en/blog"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/en/blog"/>
         <lastmod>{{ lastmod }}</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.9</priority>
     </url>
     
-    <!-- Blog Yazıları -->
-    {% for post in blog_posts %}
     <url>
-        <loc>{{ base_url }}/blog/{{ post.slug }}</loc>
-        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/blog/{{ post.slug }}?lang=tr"/>
-        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/blog/{{ post.slug }}?lang=en"/>
+        <loc>{{ base_url }}/tr/blog</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/tr/blog"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/en/blog"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/en/blog"/>
+        <lastmod>{{ lastmod }}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    
+    <!-- Blog Yazıları - Her dil için ayrı URL -->
+    {% for post in blog_posts %}
+    <!-- English Version -->
+    <url>
+        <loc>{{ base_url }}/en/blog/{{ post.slug_en }}</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/tr/blog/{{ post.slug_tr }}"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/en/blog/{{ post.slug_en }}"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/en/blog/{{ post.slug_en }}"/>
+        <lastmod>{{ post.lastmod if post.lastmod else lastmod }}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <!-- Turkish Version -->
+    <url>
+        <loc>{{ base_url }}/tr/blog/{{ post.slug_tr }}</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/tr/blog/{{ post.slug_tr }}"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/en/blog/{{ post.slug_en }}"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/en/blog/{{ post.slug_en }}"/>
         <lastmod>{{ post.lastmod if post.lastmod else lastmod }}</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     {% endfor %}
+    
+    <!-- Pricing Sayfası -->
+    <url>
+        <loc>{{ base_url }}/en/pricing</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/tr/pricing"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/en/pricing"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/en/pricing"/>
+        <lastmod>{{ lastmod }}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    
+    <url>
+        <loc>{{ base_url }}/tr/pricing</loc>
+        <xhtml:link rel="alternate" hreflang="tr" href="{{ base_url }}/tr/pricing"/>
+        <xhtml:link rel="alternate" hreflang="en" href="{{ base_url }}/en/pricing"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="{{ base_url }}/en/pricing"/>
+        <lastmod>{{ lastmod }}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
     
 </urlset>

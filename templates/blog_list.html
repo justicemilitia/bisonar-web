@@ -16,6 +16,18 @@
                         <p class="text-lg text-gray-600 dark:text-slate-400 max-w-2xl mx-auto">Latest insights on AI automation, n8n workflows, and business technology</p>
                     </div>
                     
+                    <!-- Dil Değiştirici Ekle -->
+                    <div class="language-switcher mb-8 text-center">
+                        <a href="{{ get_url_for_lang('en', 'blog_list') }}" 
+                           class="inline-flex items-center px-4 py-2 rounded-full bg-gray-100 dark:bg-slate-800 text-sm font-medium mr-2 hover:bg-[#4640FF] hover:text-white transition-colors {% if current_lang == 'en' %}bg-[#4640FF] text-white{% endif %}">
+                            🇺🇸 English
+                        </a>
+                        <a href="{{ get_url_for_lang('tr', 'blog_list') }}" 
+                           class="inline-flex items-center px-4 py-2 rounded-full bg-gray-100 dark:bg-slate-800 text-sm font-medium hover:bg-[#4640FF] hover:text-white transition-colors {% if current_lang == 'tr' %}bg-[#4640FF] text-white{% endif %}">
+                            🇹🇷 Türkçe
+                        </a>
+                    </div>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {% for post in blog_posts %}
                         <div class="niotech-card niotech-card-border-glow rounded-xl overflow-hidden flex flex-col group">
@@ -33,7 +45,8 @@
                                 <div class="text-sm text-gray-500 dark:text-slate-400 mb-4">
                                     <span>By {{ post.author }}</span> • <span>{{ post.read_time }}</span>
                                 </div>
-                                <a href="{{ url_for('blog_detail', slug=post.slug) }}" class="text-[#8A85FF] hover:text-[#4640FF] dark:hover:text-white font-semibold self-start group/link transition-all duration-300">
+                                <!-- DEĞİŞTİ: url_for yerine get_url_for_lang kullan -->
+                                <a href="{{ get_url_for_lang(current_lang, 'blog_detail', slug=post.slug) }}" class="text-[#8A85FF] hover:text-[#4640FF] dark:hover:text-white font-semibold self-start group/link transition-all duration-300">
                                     Read More <span class="inline-block transform group-hover/link:translate-x-1 transition-transform">→</span>
                                 </a>
                             </div>

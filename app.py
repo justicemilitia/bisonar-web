@@ -13,6 +13,7 @@ import psycopg2
 from psycopg2 import sql
 from saas import saas_bp
 
+
 app = Flask(__name__)
 app.secret_key = 'bisonar-test'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -30,15 +31,62 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 DATABASE_CONFIG = {
-    'host': 'superapp-dev-rds-postgres.cna2w8equl8b.eu-central-1.rds.amazonaws.com',
-    'port': 5432,
+    'host': 'db-bisonar-do-user-4230972-0.d.db.ondigitalocean.com',
+    'port': 25060,
     'dbname': 'ai-chatbot-test-db', 
-    'user': 'postgres',
-    'password': 'SuperApp_2025'
+    'user': 'doadmin',
+    'password': 'AVNS_vd8YhqgeY5UjRAIp71P'
 }
 
 # Upload klasörünü oluştur
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+import psycopg2
+from psycopg2 import pool
+import atexit
+
+# Global connection pool
+connection_pool = None
+
+def init_connection_pool():
+    global connection_pool
+    try:
+        connection_pool = psycopg2.pool.SimpleConnectionPool(
+            1, 20,  # min 1, max 20 connection
+            **DATABASE_CONFIG
+        )
+        print("✅ PostgreSQL Connection pool başlatıldı")
+    except Exception as e:
+        print(f"❌ Connection pool hatası: {e}")
+
+def close_connection_pool():
+    if connection_pool:
+        connection_pool.closeall()
+        print("✅ Connection pool kapatıldı")
+
+# Uygulama başlangıcında pool'u başlat
+
+init_connection_pool()
+atexit.register(close_connection_pool)
+
+def get_pg_connection():
+    """Get PostgreSQL connection from pool"""
+    try:
+        if connection_pool:
+            return connection_pool.getconn()
+        else:
+            return psycopg2.connect(**DATABASE_CONFIG)
+    except Exception as e:
+        print(f"❌ PostgreSQL Connection hatası: {e}")
+        return None
+
+def return_pg_connection(conn):
+    """Return connection to pool"""
+    try:
+        if connection_pool and conn:
+            connection_pool.putconn(conn)
+    except Exception as e:
+        print(f"❌ Connection return hatası: {e}")
 
 def generate_csrf_token():
     if 'csrf_token' not in session:
@@ -135,7 +183,16 @@ def utility_processor():
         return hreflangs
     
     def get_image_dimensions(image_url):
-        """Resim boyutlarını belirle"""
+        """Resim boyutlarını belirle - GÜVENLİ VERSİYON"""
+        # Önce None veya boş string kontrolü yap
+        if not image_url:
+            return {'width': 400, 'height': 225}
+        
+        # String değilse string'e çevir
+        if not isinstance(image_url, str):
+            return {'width': 400, 'height': 225}
+        
+        # Normal kontroller
         if 'unsplash' in image_url:
             return {'width': 800, 'height': 400}
         elif 'static/uploads' in image_url:
@@ -206,11 +263,6 @@ def init_db():
         ''')
         conn.commit()
 
-def get_db_connection():
-    """Get database connection"""
-    conn = sqlite3.connect(app.config['DATABASE'])
-    conn.row_factory = sqlite3.Row
-    return conn
 
 def get_template_data():
     # URL'den dili al (örnek: /en/blog, /tr/blog)
@@ -323,100 +375,217 @@ def index(lang=None):
     g.canonical_url = g.base_url  # Ana sayfa için sadece base URL
     
     # Get latest 3 blog posts for homepage
-    conn = get_db_connection()
-    posts = conn.execute('''
-        SELECT id, title, slug, excerpt, author, read_time, image_url, created_at
-        FROM posts 
-        WHERE is_published = 1 
-        ORDER BY created_at DESC 
-        LIMIT 3
-    ''').fetchall()
-    conn.close()
+    conn = get_pg_connection()
+    cursor = conn.cursor()  # ✅ Cursor oluştur
     
-    blog_posts = [dict(post) for post in posts]
+    try:
+        if lang == 'tr':
+            cursor.execute('''
+                SELECT id, title_tr as title, slug_tr as slug, excerpt_tr as excerpt, 
+                    author, read_time, image_url, created_at
+                FROM posts 
+                WHERE is_published = true 
+                ORDER BY created_at DESC 
+                LIMIT 3
+            ''')
+        else:
+            cursor.execute('''
+                SELECT id, title_en as title, slug_en as slug, excerpt_en as excerpt, 
+                    author, read_time, image_url, created_at
+                FROM posts 
+                WHERE is_published = true 
+                ORDER BY created_at DESC 
+                LIMIT 3
+            ''')
+        
+        posts = cursor.fetchall()
+        columns = [desc[0] for desc in cursor.description]  # Sütun isimlerini al
+        blog_posts = [dict(zip(columns, post)) for post in posts]  # Dict'e çevir
+        
+    finally:
+        cursor.close()
+        return_pg_connection(conn)  # ✅ Connection'ı pool'a geri ver
     
     return render_template('index.html', **template_data, blog_posts=blog_posts)
 
 # Blog route'ları - multilingual
+
 @app.route('/blog')
 @app.route('/<lang>/blog')
 def blog_list(lang=None):
-    """Blog list page - multilingual"""
-    if lang and lang not in ['en', 'tr']:
-        return redirect(url_for('blog_list'))
+    """Blog list page - multilingual - POSTGRESQL"""
+    conn = None
+    cursor = None
     
-    # Dil ayarla
-    if lang:
-        session['language'] = lang
+    try:
+        if lang and lang not in ['en', 'tr']:
+            return redirect(url_for('blog_list'))
+        
+        # Dil ayarla
+        if lang:
+            session['language'] = lang
+        else:
+            lang = session.get('language', 'en')
+        
+        template_data = get_template_data()
+        
+        print(f"🔍 DEBUG: Using PostgreSQL for blog list - Language: {lang}")
+        
+        conn = get_pg_connection()
+        if not conn:
+            flash('Database connection error', 'error')
+            return render_template('blog_list.html', **template_data, blog_posts=[])
+            
+        cursor = conn.cursor()
+        
+        if lang == 'tr':
+            cursor.execute('''
+                SELECT id, title_tr as title, slug_tr as slug, excerpt_tr as excerpt, 
+                       author, read_time, image_url, created_at
+                FROM posts 
+                WHERE is_published = true 
+                ORDER BY created_at DESC
+            ''')
+        else:
+            cursor.execute('''
+                SELECT id, title_en as title, slug_en as slug, excerpt_en as excerpt, 
+                       author, read_time, image_url, created_at
+                FROM posts 
+                WHERE is_published = true 
+                ORDER BY created_at DESC
+            ''')
+        
+        posts_data = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
+        
+        blog_posts = []
+        for post in posts_data:
+            post_dict = dict(zip(column_names, post))
+            blog_posts.append(post_dict)
+            print(f"🔍 DEBUG: Post - {post_dict.get('title', 'No Title')}, Image: {post_dict.get('image_url')}")
+        
+        print(f"✅ DEBUG: Found {len(blog_posts)} posts in PostgreSQL")
+        
+        return render_template('blog_list.html', **template_data, blog_posts=blog_posts)
+        
+    except Exception as e:
+        print(f"❌ Blog list error: {e}")
+        import traceback
+        traceback.print_exc()
+        return render_template('blog_list.html', **template_data, blog_posts=[])
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            return_pg_connection(conn)
     
-    template_data = get_template_data()
-    
-    # Blog listesi için meta bilgilerini güncelle
-    g.meta_title = 'Blog - AI Automation Insights | Bisonar'
-    g.meta_description = 'Latest insights on AI automation, n8n workflows, and business technology'
-    
-    # Canonical URL için doğru dil prefix'ini kullan
-    if lang:
-        g.canonical_url = f"{g.base_url}/{lang}/blog"
-    else:
-        g.canonical_url = f"{g.base_url}/blog"
-    
-    g.og_type = 'website'
-    
-    conn = get_db_connection()
-    posts = conn.execute('''
-        SELECT id, title, slug, excerpt, author, read_time, image_url, created_at
-        FROM posts 
-        WHERE is_published = 1 
-        ORDER BY created_at DESC
-    ''').fetchall()
-    conn.close()
-    
-    blog_posts = [dict(post) for post in posts]
-    
-    return render_template('blog_list.html', **template_data, blog_posts=blog_posts)
-
 @app.route('/blog/<slug>')
 @app.route('/<lang>/blog/<slug>')
 def blog_detail(slug, lang=None):
-    """Blog detail page - multilingual"""
+    """Blog detail page - multilingual with slug translation"""
     if lang and lang not in ['en', 'tr']:
         return redirect(url_for('blog_detail', slug=slug))
     
     # Dil ayarla
     if lang:
         session['language'] = lang
+    else:
+        lang = session.get('language', 'en')
     
     template_data = get_template_data()
     
-    conn = get_db_connection()
-    post = conn.execute('''
-        SELECT id, title, slug, content, excerpt, author, read_time, image_url, created_at
-        FROM posts 
-        WHERE slug = ? AND is_published = 1
-    ''', (slug,)).fetchone()
-    conn.close()
+    conn = None
+    cursor = None
     
-    if post is None:
+    try:
+        conn = get_pg_connection()
+        if not conn:
+            return "Database connection error", 500
+            
+        cursor = conn.cursor()
+        
+        # Önce mevcut slug'ın hangi dilde olduğunu bul
+        cursor.execute('''
+            SELECT slug_en, slug_tr 
+            FROM posts 
+            WHERE (slug_en = %s OR slug_tr = %s) AND is_published = true
+        ''', (slug, slug))
+        
+        slug_data = cursor.fetchone()
+        
+        if slug_data is None:
+            return "Post not found", 404
+        
+        slug_en, slug_tr = slug_data
+        
+        # Eğer mevcut slug ile hedef dil uyuşmuyorsa, yönlendir
+        if lang == 'tr' and slug != slug_tr:
+            # İngilizce slug ile Türkçe sayfaya erişmeye çalışıyor, Türkçe slug'a yönlendir
+            return redirect(f'/tr/blog/{slug_tr}')
+        elif lang == 'en' and slug != slug_en:
+            # Türkçe slug ile İngilizce sayfaya erişmeye çalışıyor, İngilizce slug'a yönlendir
+            return redirect(f'/en/blog/{slug_en}')
+        
+        # Doğru dil alanlarını seç
+        if lang == 'tr':
+            cursor.execute('''
+                SELECT id, title_tr as title, slug_tr as slug, content_tr as content, 
+                       excerpt_tr as excerpt, author, read_time, image_url, created_at
+                FROM posts 
+                WHERE slug_tr = %s AND is_published = true
+            ''', (slug,))
+        else:
+            cursor.execute('''
+                SELECT id, title_en as title, slug_en as slug, content_en as content, 
+                       excerpt_en as excerpt, author, read_time, image_url, created_at
+                FROM posts 
+                WHERE slug_en = %s AND is_published = true
+            ''', (slug,))
+        
+        post_data = cursor.fetchone()
+        
+        if post_data is None:
+            return "Post not found", 404
+        
+        column_names = [desc[0] for desc in cursor.description]
+        post_dict = dict(zip(column_names, post_data))
+        post_dict['content_html'] = markdown(post_dict['content'])
+        
+        # Diğer dildeki slug'ları da post_dict'e ekle (template'de kullanmak için)
+        cursor.execute('''
+            SELECT slug_en, slug_tr 
+            FROM posts 
+            WHERE id = %s
+        ''', (post_dict['id'],))
+        
+        all_slugs = cursor.fetchone()
+        if all_slugs:
+            post_dict['slug_en'] = all_slugs[0]
+            post_dict['slug_tr'] = all_slugs[1]
+        
+        # Meta bilgilerini güncelle
+        g.meta_title = f"{post_dict['title']} | Bisonar"
+        g.meta_description = post_dict['excerpt']
+        
+        if lang:
+            g.canonical_url = f"{g.base_url}/{lang}/blog/{slug}"
+        else:
+            g.canonical_url = f"{g.base_url}/blog/{slug}"
+        
+        g.og_type = 'article'
+        g.og_image = post_dict['image_url']
+        
+        return render_template('blog_detail.html', **template_data, post=post_dict)
+        
+    except Exception as e:
+        print(f"❌ Blog detail error: {e}")
         return "Post not found", 404
-    
-    post_dict = dict(post)
-    post_dict['content_html'] = markdown(post_dict['content'])
-    
-    # Blog detayı için meta bilgilerini güncelle
-    g.meta_title = f"{post_dict['title']} | Bisonar"
-    g.meta_description = post_dict['excerpt']
-    
-    # Canonical URL için doğru dil prefix'ini kullan
-    if lang:
-        g.canonical_url = f"{g.base_url}/{lang}/blog/{slug}"
-    else:
-        g.canonical_url = f"{g.base_url}/blog/{slug}"
-    
-    g.og_type = 'article'
-    g.og_image = post_dict['image_url']
-    
-    return render_template('blog_detail.html', **template_data, post=post_dict)
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            return_pg_connection(conn)
+
 
 # Pricing route'ları - multilingual
 @app.route('/pricing')
@@ -598,106 +767,6 @@ def billing():
     finally:
         conn.close()
 
-# Add sample blog posts if none exist
-def add_sample_posts():
-    conn = get_db_connection()
-    existing = conn.execute('SELECT COUNT(*) as count FROM posts').fetchone()['count']
-    
-    if existing == 0:
-        sample_posts = [
-            {
-                'title': 'AI Automation: Revolutionizing Business Processes',
-                'slug': 'ai-automation-revolutionizing-business-processes',
-                'content': '''
-# AI Automation: Revolutionizing Business Processes
-
-Artificial Intelligence is transforming how businesses operate. In this post, we explore how AI automation can streamline your workflows and boost productivity.
-
-## Key Benefits
-
-- **Time Savings**: Automate repetitive tasks
-- **Error Reduction**: Minimize human errors
-- **Scalability**: Handle increased workload effortlessly
-
-## Real-World Applications
-
-From customer service chatbots to data analysis, AI automation is becoming essential for modern businesses.
-
-*Published on: {}*
-                '''.format(datetime.now().strftime('%B %d, %Y')),
-                'excerpt': 'Discover how AI automation can transform your business processes and increase efficiency.',
-                'author': 'Bisonar Team',
-                'read_time': '5 min read',
-                'image_url': 'https://images.unsplash.com/photo-1516110833967-0b5716ca1387?q=80&w=800&auto=format&fit=crop'
-            },
-            {
-                'title': 'n8n Workflows: Best Practices for 2024',
-                'slug': 'n8n-workflows-best-practices-2024',
-                'content': '''
-# n8n Workflows: Best Practices for 2024
-
-n8n is a powerful workflow automation tool. Here are the best practices for creating efficient and maintainable workflows.
-
-## Planning Your Workflow
-
-1. **Define Objectives**: What do you want to achieve?
-2. **Map Dependencies**: Understand task relationships
-3. **Error Handling**: Plan for failures
-
-## Optimization Tips
-
-- Use webhooks for real-time triggers
-- Implement proper logging
-- Test thoroughly before deployment
-
-*Published on: {}*
-                '''.format(datetime.now().strftime('%B %d, %Y')),
-                'excerpt': 'Learn the best practices for creating efficient and scalable n8n workflows in 2024.',
-                'author': 'Bisonar Team',
-                'read_time': '7 min read',
-                'image_url': 'https://images.unsplash.com/photo-1620712943543-26fc76334419?q=80&w=800&auto=format&fit=crop'
-            },
-            {
-                'title': 'Integrating ChatGPT with Your Business Applications',
-                'slug': 'integrating-chatgpt-business-applications',
-                'content': '''
-# Integrating ChatGPT with Your Business Applications
-
-ChatGPT integration can enhance various business functions. Learn how to seamlessly integrate AI into your applications.
-
-## Integration Methods
-
-- **API Integration**: Direct API calls
-- **Webhook Triggers**: Event-based responses
-- **Custom Middleware**: Bridge between systems
-
-## Use Cases
-
-- Customer support automation
-- Content generation
-- Data analysis and reporting
-
-*Published on: {}*
-                '''.format(datetime.now().strftime('%B %d, %Y')),
-                'excerpt': 'Explore different methods to integrate ChatGPT with your business applications for enhanced functionality.',
-                'author': 'Bisonar Team',
-                'read_time': '6 min read',
-                'image_url': 'https://images.unsplash.com/photo-1634912265239-49925890ab0b?q=80&w=800&auto=format&fit=crop'
-            }
-        ]
-        
-        for post in sample_posts:
-            conn.execute('''
-                INSERT INTO posts (title, slug, content, excerpt, author, read_time, image_url)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (post['title'], post['slug'], post['content'], post['excerpt'], 
-                  post['author'], post['read_time'], post['image_url']))
-        
-        conn.commit()
-    conn.close()
-
-# Add sample posts on startup
-add_sample_posts()
 
 # HTTPS yönlendirmesi
 @app.before_request
@@ -716,27 +785,60 @@ def normalize_url():
 
 # API Routes - bunlar multilingual değil
 @app.route('/api/blog/posts')
-def api_blog_posts():
-    """API endpoint to get all blog posts"""
-    conn = get_db_connection()
-    posts = conn.execute('''
-        SELECT id, title, slug, excerpt, author, read_time, image_url, created_at
-        FROM posts 
-        WHERE is_published = 1 
-        ORDER BY created_at DESC
-    ''').fetchall()
-    conn.close()
+@app.route('/api/blog/posts/<lang>')
+def api_blog_posts(lang=None):
+    """API endpoint to get all blog posts - PostgreSQL version with language support"""
+    conn = None
+    cursor = None
     
-    return jsonify([dict(post) for post in posts])
+    try:
+        # Varsayılan dil İngilizce
+        if not lang:
+            lang = 'en'
+        
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        
+        if lang == 'tr':
+            cursor.execute('''
+                SELECT id, title_tr as title, slug_tr as slug, excerpt_tr as excerpt, 
+                       author, read_time, image_url, created_at
+                FROM posts 
+                WHERE is_published = true 
+                ORDER BY created_at DESC
+            ''')
+        else:
+            cursor.execute('''
+                SELECT id, title_en as title, slug_en as slug, excerpt_en as excerpt, 
+                       author, read_time, image_url, created_at
+                FROM posts 
+                WHERE is_published = true 
+                ORDER BY created_at DESC
+            ''')
+        
+        posts_data = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
+        
+        posts = [dict(zip(column_names, post)) for post in posts_data]
+        return jsonify(posts)
+        
+    except Exception as e:
+        print(f"API blog posts error: {e}")
+        return jsonify([])
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            return_pg_connection(conn)
 
 @app.route('/api/blog/posts/<int:post_id>')
 def api_blog_post(post_id):
     """API endpoint to get specific blog post"""
-    conn = get_db_connection()
+    conn = get_pg_connection()
     post = conn.execute('''
         SELECT id, title, slug, content, excerpt, author, read_time, image_url, created_at
         FROM posts 
-        WHERE id = ? AND is_published = 1
+        WHERE id = ? AND is_published = true
     ''', (post_id,)).fetchone()
     conn.close()
     
@@ -748,7 +850,7 @@ def api_blog_post(post_id):
 @app.route('/api/admin/posts', methods=['GET'])
 @admin_required
 def api_admin_posts():
-    conn = get_db_connection()
+    conn = get_pg_connection()
     posts = conn.execute('''
         SELECT id, title, slug, excerpt, author, read_time, image_url, created_at, is_published
         FROM posts 
@@ -806,70 +908,60 @@ def sitemap():
         else:
             base_url = 'https://www.bisonar.com'
         
-        conn = get_db_connection()
-        blog_posts = conn.execute('''
-            SELECT slug, updated_at, created_at 
-            FROM posts 
-            WHERE is_published = 1
-            ORDER BY created_at DESC
-        ''').fetchall()
-        conn.close()
+        conn = None
+        cursor = None
         
-        # Blog postlarını formatla - SAAT BİLGİSİNİ KALDIR
-        formatted_posts = []
-        for post in blog_posts:
-            post_dict = dict(post)
-            lastmod = post['updated_at'] or post['created_at']
-            
-            # Tarihi formatla - sadece YYYY-AA-GG
-            if lastmod:
-                if isinstance(lastmod, str):
-                    # "2025-10-23 23:11:04" -> "2025-10-23"
-                    post_dict['lastmod'] = lastmod.split(' ')[0]
-                else:
-                    # datetime objesiyse
-                    post_dict['lastmod'] = lastmod.strftime('%Y-%m-%d')
-            else:
-                post_dict['lastmod'] = datetime.now().strftime('%Y-%m-%d')
+        try:
+            conn = get_pg_connection()
+            if not conn:
+                return "Database connection error", 500
                 
-            formatted_posts.append(post_dict)
-        
-        # Multilingual URL'ler için sitemap
-        multilingual_urls = [
-            {'loc': '', 'priority': '1.0', 'changefreq': 'weekly', 'lang': 'en'},
-            {'loc': '/en', 'priority': '1.0', 'changefreq': 'weekly', 'lang': 'en'},
-            {'loc': '/tr', 'priority': '1.0', 'changefreq': 'weekly', 'lang': 'tr'},
-            {'loc': '/en/blog', 'priority': '0.8', 'changefreq': 'weekly', 'lang': 'en'},
-            {'loc': '/tr/blog', 'priority': '0.8', 'changefreq': 'weekly', 'lang': 'tr'},
-            {'loc': '/en/pricing', 'priority': '0.7', 'changefreq': 'monthly', 'lang': 'en'},
-            {'loc': '/tr/pricing', 'priority': '0.7', 'changefreq': 'monthly', 'lang': 'tr'},
-        ]
-        
-        # Blog postlar için multilingual URL'ler
-        for post in formatted_posts:
-            multilingual_urls.append({
-                'loc': f'/en/blog/{post["slug"]}',
-                'lastmod': post['lastmod'],
-                'priority': '0.6',
-                'changefreq': 'monthly',
-                'lang': 'en'
-            })
-            multilingual_urls.append({
-                'loc': f'/tr/blog/{post["slug"]}',
-                'lastmod': post['lastmod'],
-                'priority': '0.6',
-                'changefreq': 'monthly',
-                'lang': 'tr'
-            })
-        
-        response = render_template(
-            'sitemap.xml', 
-            base_url=base_url,
-            urls=multilingual_urls,
-            lastmod=datetime.now().strftime('%Y-%m-%d')
-        )
-        
-        return Response(response, mimetype='application/xml')
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT slug_en, slug_tr, updated_at, created_at 
+                FROM posts 
+                WHERE is_published = true
+                ORDER BY created_at DESC
+            ''')
+            
+            posts_data = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description]
+            
+            # Blog postlarını formatla
+            formatted_posts = []
+            for post in posts_data:
+                post_dict = dict(zip(column_names, post))
+                lastmod = post_dict.get('updated_at') or post_dict.get('created_at')
+                
+                # Tarihi formatla - sadece YYYY-AA-GG
+                if lastmod:
+                    if isinstance(lastmod, str):
+                        post_dict['lastmod'] = lastmod.split(' ')[0]
+                    else:
+                        post_dict['lastmod'] = lastmod.strftime('%Y-%m-%d')
+                else:
+                    post_dict['lastmod'] = datetime.now().strftime('%Y-%m-%d')
+                    
+                formatted_posts.append(post_dict)
+            
+            response = render_template(
+                'sitemap.xml', 
+                base_url=base_url,
+                blog_posts=formatted_posts,
+                lastmod=datetime.now().strftime('%Y-%m-%d')
+            )
+            
+            return Response(response, mimetype='application/xml')
+            
+        except Exception as e:
+            print(f"Sitemap database error: {e}")
+            return "Sitemap generation error", 500
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                return_pg_connection(conn)
     
     except Exception as e:
         print(f"Sitemap error: {e}")
@@ -883,119 +975,270 @@ def robots():
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
-    conn = get_db_connection()
-    posts = conn.execute('''
-        SELECT id, title, slug, excerpt, author, read_time, image_url, created_at, is_published
-        FROM posts 
-        ORDER BY created_at DESC
-    ''').fetchall()
-    conn.close()
+    """Admin dashboard - PostgreSQL version"""
+    conn = None
+    cursor = None
     
-    blog_posts = [dict(post) for post in posts]
-    return render_template('admin/dashboard.html', posts=blog_posts)
+    try:
+        conn = get_pg_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, title_en as title, slug_en as slug, excerpt_en as excerpt, 
+                   author, read_time, image_url, created_at, is_published
+            FROM posts 
+            ORDER BY created_at DESC
+        ''')
+        
+        posts_data = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
+        
+        blog_posts = []
+        for post in posts_data:
+            post_dict = {}
+            for i, column_name in enumerate(column_names):
+                value = post[i]
+                # DateTime objelerini template-friendly hale getir
+                if isinstance(value, datetime):
+                    post_dict[column_name] = value
+                else:
+                    post_dict[column_name] = value
+            blog_posts.append(post_dict)
+        
+        return render_template('admin/dashboard.html', posts=blog_posts)
+        
+    except Exception as e:
+        print(f"Admin dashboard error: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Error loading posts', 'error')
+        return render_template('admin/dashboard.html', posts=[])
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            return_pg_connection(conn)
 
 @app.route('/admin/posts/new', methods=['GET', 'POST'])
 @admin_required
 def admin_new_post():
     if request.method == 'POST':
-        title = request.form['title']
-        slug = request.form['slug']
-        content = request.form['content']
-        excerpt = request.form['excerpt']
-        author = request.form['author']
-        read_time = request.form['read_time']
-        is_published = 'is_published' in request.form
+        print("🔍 FORM SUBMIT EDİLDİ - DEBUG")
         
-        # Image upload
-        image_url = ''
-        if 'image' in request.files:
-            file = request.files['image']
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                image_url = f'/static/uploads/{filename}'
+        conn = None
+        cursor = None
         
-        # Default image if none uploaded
-        if not image_url:
-            image_url = 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=800&auto=format&fit=crop'
-        
-        conn = get_db_connection()
         try:
-            conn.execute('''
-                INSERT INTO posts (title, slug, content, excerpt, author, read_time, image_url, is_published)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (title, slug, content, excerpt, author, read_time, image_url, is_published))
+            # Form verilerini al
+            title_en = request.form['title_en']
+            title_tr = request.form['title_tr']
+            slug_en = request.form['slug_en']
+            slug_tr = request.form['slug_tr']
+            content_en = request.form['content_en']
+            content_tr = request.form['content_tr']
+            excerpt_en = request.form['excerpt_en']
+            excerpt_tr = request.form['excerpt_tr']
+            author = request.form['author']
+            read_time = request.form['read_time']
+            language = request.form['language']
+            is_published = 'is_published' in request.form
+            
+            print(f"📝 Form Data: {title_en}, {slug_en}")
+            
+            # PostgreSQL bağlantısı
+            conn = get_pg_connection()
+            if not conn:
+                flash('Database connection error', 'error')
+                return render_template('admin/edit_post.html', post=None)
+                
+            cursor = conn.cursor()
+            
+            # PostgreSQL INSERT sorgusu
+            query = '''
+                INSERT INTO posts 
+                (title_en, title_tr, slug_en, slug_tr, content_en, content_tr,
+                 excerpt_en, excerpt_tr, author, read_time, language, is_published)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            '''
+            
+            cursor.execute(query, (
+                title_en, title_tr, slug_en, slug_tr, content_en, content_tr,
+                excerpt_en, excerpt_tr, author, read_time, language, is_published
+            ))
+            
+            new_post_id = cursor.fetchone()[0]
             conn.commit()
+            
+            print(f"✅ POST BAŞARIYLA KAYDEDİLDİ - ID: {new_post_id}")
+            flash('Blog post created successfully!', 'success')
             return redirect(url_for('admin_dashboard'))
-        except sqlite3.IntegrityError:
-            flash('Slug already exists!', 'error')
+            
+        except Exception as e:
+            print(f"❌ HATA: {str(e)}")
+            flash(f'Error creating post: {str(e)}', 'error')
         finally:
-            conn.close()
+            if cursor:
+                cursor.close()
+            if conn:
+                return_pg_connection(conn)
     
     return render_template('admin/edit_post.html', post=None)
 
 @app.route('/admin/posts/<int:post_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def admin_edit_post(post_id):
-    conn = get_db_connection()
+    """Edit post - POSTGRESQL version"""
+    conn = None
+    cursor = None
     
     if request.method == 'POST':
-        title = request.form['title']
-        slug = request.form['slug']
-        content = request.form['content']
-        excerpt = request.form['excerpt']
-        author = request.form['author']
-        read_time = request.form['read_time']
-        is_published = 'is_published' in request.form
-        
-        # Image upload
-        image_url = request.form.get('current_image', '')
-        if 'image' in request.files:
-            file = request.files['image']
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                image_url = f'/static/uploads/{filename}'
-        
         try:
-            conn.execute('''
+            title_en = request.form['title_en']
+            title_tr = request.form['title_tr']
+            slug_en = request.form['slug_en']
+            slug_tr = request.form['slug_tr']
+            content_en = request.form['content_en']
+            content_tr = request.form['content_tr']
+            excerpt_en = request.form['excerpt_en']
+            excerpt_tr = request.form['excerpt_tr']
+            author = request.form['author']
+            read_time = request.form['read_time']
+            language = request.form['language']
+            is_published = 'is_published' in request.form
+            
+            # Image upload
+            image_url = request.form.get('current_image', '')
+            if 'image' in request.files:
+                file = request.files['image']
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    image_url = f'/static/uploads/{filename}'
+            
+            conn = get_pg_connection()
+            if not conn:
+                flash('Database connection error', 'error')
+                return redirect(url_for('admin_dashboard'))
+                
+            cursor = conn.cursor()
+            
+            cursor.execute('''
                 UPDATE posts 
-                SET title=?, slug=?, content=?, excerpt=?, author=?, read_time=?, image_url=?, is_published=?, updated_at=CURRENT_TIMESTAMP
-                WHERE id=?
-            ''', (title, slug, content, excerpt, author, read_time, image_url, is_published, post_id))
+                SET title_en=%s, title_tr=%s, slug_en=%s, slug_tr=%s, content_en=%s, content_tr=%s,
+                    excerpt_en=%s, excerpt_tr=%s, author=%s, read_time=%s, image_url=%s, language=%s, 
+                    is_published=%s, updated_at=CURRENT_TIMESTAMP
+                WHERE id=%s
+            ''', (title_en, title_tr, slug_en, slug_tr, content_en, content_tr,
+                  excerpt_en, excerpt_tr, author, read_time, image_url, language, 
+                  is_published, post_id))
+            
             conn.commit()
+            flash('Blog post updated successfully!', 'success')
             return redirect(url_for('admin_dashboard'))
-        except sqlite3.IntegrityError:
-            flash('Slug already exists!', 'error')
+            
+        except Exception as e:
+            print(f"Update post error: {e}")
+            flash(f'Error updating post: {str(e)}', 'error')
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                return_pg_connection(conn)
     
-    post = conn.execute('SELECT * FROM posts WHERE id = ?', (post_id,)).fetchone()
-    conn.close()
+    # GET request - post'u getir
+    conn = None
+    cursor = None
     
-    if post is None:
-        return "Post not found", 404
-    
-    return render_template('admin/edit_post.html', post=dict(post))
+    try:
+        conn = get_pg_connection()
+        if not conn:
+            flash('Database connection error', 'error')
+            return redirect(url_for('admin_dashboard'))
+            
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM posts WHERE id = %s', (post_id,))
+        post_data = cursor.fetchone()
+        
+        if post_data is None:
+            flash('Post not found!', 'error')
+            return redirect(url_for('admin_dashboard'))
+        
+        column_names = [desc[0] for desc in cursor.description]
+        post = dict(zip(column_names, post_data))
+        return render_template('admin/edit_post.html', post=post)
+        
+    except Exception as e:
+        print(f"Edit post error: {e}")
+        flash('Error loading post', 'error')
+        return redirect(url_for('admin_dashboard'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            return_pg_connection(conn)
 
 @app.route('/admin/posts/<int:post_id>/delete', methods=['POST'])
 @admin_required
 def admin_delete_post(post_id):
-    conn = get_db_connection()
-    conn.execute('DELETE FROM posts WHERE id = ?', (post_id,))
-    conn.commit()
-    conn.close()
+    """Delete post - POSTGRESQL version"""
+    conn = None
+    cursor = None
+    
+    try:
+        conn = get_pg_connection()
+        if not conn:
+            flash('Database connection error', 'error')
+            return redirect(url_for('admin_dashboard'))
+            
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM posts WHERE id = %s', (post_id,))
+        conn.commit()
+        flash('Post deleted successfully!', 'success')
+    except Exception as e:
+        print(f"Delete post error: {e}")
+        flash('Error deleting post', 'error')
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            return_pg_connection(conn)
+    
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/posts/<int:post_id>/toggle', methods=['POST'])
 @admin_required
 def admin_toggle_post(post_id):
-    conn = get_db_connection()
-    post = conn.execute('SELECT is_published FROM posts WHERE id = ?', (post_id,)).fetchone()
-    new_status = not post['is_published']
-    conn.execute('UPDATE posts SET is_published = ? WHERE id = ?', (new_status, post_id))
-    conn.commit()
-    conn.close()
+    """Toggle post status - POSTGRESQL version"""
+    conn = None
+    cursor = None
+    
+    try:
+        conn = get_pg_connection()
+        if not conn:
+            flash('Database connection error', 'error')
+            return redirect(url_for('admin_dashboard'))
+            
+        cursor = conn.cursor()
+        cursor.execute('SELECT is_published FROM posts WHERE id = %s', (post_id,))
+        post_data = cursor.fetchone()
+        
+        if post_data:
+            new_status = not post_data[0]
+            cursor.execute('UPDATE posts SET is_published = %s WHERE id = %s', (new_status, post_id))
+            conn.commit()
+            flash('Post status updated!', 'success')
+    except Exception as e:
+        print(f"Toggle post error: {e}")
+        flash('Error updating post status', 'error')
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            return_pg_connection(conn)
+    
     return redirect(url_for('admin_dashboard'))
 
 # AI Blog Generation Routes
