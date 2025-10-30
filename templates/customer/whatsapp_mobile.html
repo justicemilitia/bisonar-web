@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Style Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    <!-- WhatsApp Benzeri Chat Container -->
+    <div class="max-w-md mx-auto h-screen bg-white flex flex-col shadow-lg">
+        <!-- Header -->
+        <div class="bg-green-500 text-white p-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <button class="text-white">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-green-300 rounded-full flex items-center justify-center">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-semibold">AI Asistan</h2>
+                        <p class="text-xs text-green-100">Çevrimiçi</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex space-x-4">
+                <button class="text-white">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button class="text-white">
+                    <i class="fas fa-phone"></i>
+                </button>
+                <button class="text-white">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="flex-1 overflow-y-auto p-4 bg-gray-50">
+            <!-- Tarih Gösterimi -->
+            <div class="text-center mb-4">
+                <span class="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">Bugün</span>
+            </div>
+
+            <!-- Gelen Mesajlar (AI) -->
+            <div class="flex mb-4">
+                <div class="w-8 h-8 bg-green-300 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                    <i class="fas fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-white rounded-2xl rounded-tl-none px-4 py-2 max-w-[80%] shadow-sm">
+                    <p class="text-gray-800">Merhaba! Size nasıl yardımcı olabilirim? Hangi konuda destek almak istiyorsunuz?</p>
+                    <span class="text-xs text-gray-500 block text-right mt-1">10:30</span>
+                </div>
+            </div>
+
+            <!-- Giden Mesajlar (Kullanıcı) -->
+            <div class="flex justify-end mb-4">
+                <div class="bg-green-100 rounded-2xl rounded-tr-none px-4 py-2 max-w-[80%] shadow-sm">
+                    <p class="text-gray-800">Selam, ürünleriniz hakkında bilgi almak istiyorum.</p>
+                    <span class="text-xs text-gray-500 block text-right mt-1">10:31 ✓</span>
+                </div>
+            </div>
+
+            <!-- Gelen Mesajlar (AI) -->
+            <div class="flex mb-4">
+                <div class="w-8 h-8 bg-green-300 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                    <i class="fas fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-white rounded-2xl rounded-tl-none px-4 py-2 max-w-[80%] shadow-sm">
+                    <p class="text-gray-800">Tabii ki! Hangi ürünlerle ilgileniyorsunuz? Size en uygun seçenekleri sunabilirim.</p>
+                    <span class="text-xs text-gray-500 block text-right mt-1">10:31</span>
+                </div>
+            </div>
+
+            <!-- Giden Mesajlar (Kullanıcı) -->
+            <div class="flex justify-end mb-4">
+                <div class="bg-green-100 rounded-2xl rounded-tr-none px-4 py-2 max-w-[80%] shadow-sm">
+                    <p class="text-gray-800">Akıllı ev cihazları ile ilgileniyorum.</p>
+                    <span class="text-xs text-gray-500 block text-right mt-1">10:32 ✓✓</span>
+                </div>
+            </div>
+
+            <!-- Gelen Mesajlar (AI) -->
+            <div class="flex mb-4">
+                <div class="w-8 h-8 bg-green-300 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                    <i class="fas fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-white rounded-2xl rounded-tl-none px-4 py-2 max-w-[80%] shadow-sm">
+                    <p class="text-gray-800">Harika! Akıllı ev cihazlarımız arasında:</p>
+                    <ul class="text-gray-800 list-disc list-inside mt-2 space-y-1">
+                        <li>Akıllı termostatlar</li>
+                        <li>LED aydınlatma sistemleri</li>
+                        <li>Güvenlik kameraları</li>
+                        <li>Akıllı prizler</li>
+                    </ul>
+                    <p class="text-gray-800 mt-2">Hangisi ilginizi çekiyor?</p>
+                    <span class="text-xs text-gray-500 block text-right mt-1">10:32</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="bg-gray-100 p-3 border-t border-gray-200">
+            <div class="flex items-center space-x-2">
+                <button class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-600">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <div class="flex-1 bg-white rounded-full border border-gray-300">
+                    <input 
+                        type="text" 
+                        placeholder="Mesaj yazın..."
+                        class="w-full px-4 py-2 bg-transparent outline-none rounded-full"
+                    >
+                </div>
+                <button class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Özel scrollbar */
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 4px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 2px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</body>
+</html>

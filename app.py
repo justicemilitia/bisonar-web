@@ -35,7 +35,8 @@ DATABASE_CONFIG = {
     'port': 25060,
     'dbname': 'ai-chatbot-test-db', 
     'user': 'doadmin',
-    'password': 'AVNS_vd8YhqgeY5UjRAIp71P'
+    'password': 'AVNS_vd8YhqgeY5UjRAIp71P',
+    'sslmode':'require'
 }
 
 # Upload klasörünü oluştur
@@ -742,7 +743,7 @@ def set_language(lang):
 def billing():
     """Ödeme sayfası"""
     if 'customer_id' not in session:
-        return redirect('/customer_login')
+        return redirect('/login')
     
     plan = request.args.get('plan', 'demo')
     
@@ -760,7 +761,7 @@ def billing():
                 
                 return f"Billing page for plan: {plan} - Customer: {customer['name']}"
             else:
-                return redirect('/customer_login')
+                return redirect('/login')
     except Exception as e:
         print(f"Billing error: {e}")
         return redirect('/dashboard')
@@ -1441,7 +1442,7 @@ def customer_signup():
                 print(f"🔗 Verification URL: http://localhost:8000/verify/{verification_token}")
                 
                 flash('Kayıt başarılı! Lütfen emailinizi kontrol edin.', 'success')
-                return redirect(url_for('customer_login'))
+                return redirect(url_for('login'))
                 
         except psycopg2.IntegrityError:
             flash('Bu email adresi zaten kayıtlı.', 'error')
@@ -1490,10 +1491,10 @@ def verify_customer(token):
     finally:
         conn.close()
     
-    return redirect(url_for('customer_login'))
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
-def customer_login():
+def login():
     """Müşteri giriş sayfası"""
     if request.method == 'POST':
         email = request.form['email']
@@ -1618,7 +1619,7 @@ def update_customer_prompt():
 def pricing_settings():
     """Fiyat listesi yönetimi"""
     if 'customer_id' not in session:
-        return redirect(url_for('customer_login'))
+        return redirect(url_for('login'))
     return render_template('customer/pricing.html')
 
 @app.route('/api/customer/pricing', methods=['GET', 'POST'])
@@ -1744,7 +1745,7 @@ def delete_customer_pricing(price_id):
 def ai_settings():
     """AI ayarları sayfası"""
     if 'customer_id' not in session:
-        return redirect(url_for('customer_login'))
+        return redirect(url_for('login'))
     
     conn = psycopg2.connect(**DATABASE_CONFIG)
     try:
@@ -1777,7 +1778,7 @@ def ai_settings():
 def integration_settings():
     """Entegrasyonlar sayfası"""
     if 'customer_id' not in session:
-        return redirect(url_for('customer_login'))
+        return redirect(url_for('login'))
     
     conn = psycopg2.connect(**DATABASE_CONFIG)
     try:
@@ -2132,7 +2133,7 @@ def toggle_integration(integration):
 def analytics():
     """Analitik sayfası"""
     if 'customer_id' not in session:
-        return redirect(url_for('customer_login'))
+        return redirect(url_for('login'))
     return render_template('customer/analytics.html')
 
 # Google Calendar OAuth route'u
@@ -2140,7 +2141,7 @@ def analytics():
 def google_calendar_connect():
     """Google Calendar OAuth bağlantısı"""
     if 'customer_id' not in session:
-        return redirect(url_for('customer_login'))
+        return redirect(url_for('login'))
     
     # Google OAuth URL oluştur
     from saas.config import GOOGLE_OAUTH_CONFIG
@@ -2163,7 +2164,7 @@ def google_calendar_connect():
 def customer_dashboard():
     """Müşteri dashboard'u"""
     if 'customer_id' not in session:
-        return redirect(url_for('customer_login'))
+        return redirect(url_for('login'))
     
     conn = psycopg2.connect(**DATABASE_CONFIG)
     try:
@@ -2301,6 +2302,262 @@ def get_conversation_detail(conversation_id):
     }
     
     return jsonify(sample_conversation)
+
+@app.route('/ai-templates')
+def ai_templates():  # Sadece bu fonksiyonu kullanın
+    """Şablon kütüphanesi sayfası"""
+    if 'customer_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_pg_connection()
+    if not conn:
+        flash('Database bağlantı hatası', 'error')
+        return render_template('/customer/ai_templates.html', templates=[])
+    
+    cursor = conn.cursor()
+    
+    try:
+        # Şablonları veritabanından çek
+        cursor.execute("""
+            SELECT 
+                t.id,
+                t.template_key,
+                tt.template_name as name,
+                pt.role_and_personality,
+                pt.tone_of_voice,
+                pt.response_length,
+                pt.response_language,
+                pt.delay_seconds,
+                tt.created_at,
+                CASE 
+                    WHEN t.template_key LIKE '%satış%' OR t.template_key LIKE '%sales%' THEN 'sales'
+                    WHEN t.template_key LIKE '%destek%' OR t.template_key LIKE '%support%' THEN 'support'
+                    WHEN t.template_key LIKE '%eğitim%' OR t.template_key LIKE '%education%' THEN 'education'
+                    ELSE 'other'
+                END as category
+            FROM templates t
+            JOIN template_translations tt ON t.id = tt.template_id
+            JOIN personality_translations pt ON t.id = pt.template_id
+            WHERE tt.language_id = 1 AND pt.language_id = 1
+            ORDER BY tt.template_name
+        """)
+        
+        templates = []
+        for row in cursor.fetchall():
+            template = {
+                'id': row[0],
+                'key': row[1],
+                'name': row[2],
+                'role_and_personality': row[3],
+                'tone_of_voice': row[4],
+                'response_length': row[5],
+                'response_language': row[6],
+                'delay_seconds': row[7],
+                'created_at': row[8].strftime('%d.%m.%Y') if row[8] else 'Yeni',
+                'category': row[9],
+                'category_name': {
+                    'sales': 'Satış',
+                    'support': 'Destek', 
+                    'education': 'Eğitim',
+                    'other': 'Diğer'
+                }.get(row[9], 'Diğer'),
+                'icon': {
+                    'sales': 'fas fa-shopping-cart',
+                    'support': 'fas fa-headset',
+                    'education': 'fas fa-graduation-cap',
+                    'other': 'fas fa-cube'
+                }.get(row[9], 'fas fa-cube'),
+                'description': f"{row[2]} şablonu - {row[4]} ses tonu ile"
+            }
+            templates.append(template)
+        
+        return render_template('/customer/ai_templates.html', templates=templates)
+    
+    except Exception as e:
+        print(f"Template library error: {e}")
+        flash('Şablonlar yüklenirken bir hata oluştu', 'error')
+        return render_template('/customer/ai_templates.html', templates=[])
+    
+    finally:
+        cursor.close()
+        return_pg_connection(conn)  # ✅ DEĞİŞTİRİLDİ
+
+
+
+@app.route('/api/templates/<int:template_id>/preview')
+def template_preview_api(template_id):
+    """Şablon önizleme API endpoint'i"""
+    conn = get_pg_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection error'}), 500
+    
+    cursor = conn.cursor()
+    
+    try:
+        # Şablon detaylarını getir
+        cursor.execute("""
+            SELECT 
+                tt.template_name,
+                tt.template_name as description,
+                pt.role_and_personality,
+                pt.tone_of_voice,
+                pt.response_length,
+                pt.response_language,
+                pt.delay_seconds
+            FROM templates t
+            JOIN template_translations tt ON t.id = tt.template_id
+            JOIN personality_translations pt ON t.id = pt.template_id
+            WHERE t.id = %s AND tt.language_id = 1 AND pt.language_id = 1
+        """, (template_id,))
+        
+        template_data = cursor.fetchone()
+        
+        if not template_data:
+            return jsonify({'error': 'Template not found'}), 404
+        
+        # Aksiyonları getir
+        cursor.execute("""
+            SELECT trigger_condition, action_text, action_order
+            FROM action_translations
+            WHERE template_id = %s AND language_id = 1
+            ORDER BY action_order
+        """, (template_id,))
+        
+        actions = []
+        for action in cursor.fetchall():
+            actions.append({
+                'trigger_condition': action[0],
+                'action_text': action[1],
+                'order': action[2]
+            })
+        
+        # Kılavuzları getir
+        cursor.execute("""
+            SELECT guideline_text, guideline_order 
+            FROM public.guideline_translations 
+            WHERE template_id = %s 
+            ORDER BY guideline_order ASC
+        """, (template_id,))
+        
+        guidelines = []
+        for guideline in cursor.fetchall():
+            guidelines.append({
+                'instruction': guideline[0]
+            })
+        
+        template = {
+            'id': template_id,
+            'name': template_data[0],
+            'description': template_data[1],
+            'role_and_personality': template_data[2],
+            'tone_of_voice': template_data[3],
+            'response_length': template_data[4],
+            'response_language': template_data[5],
+            'delay_seconds': template_data[6],
+            'actions': actions,
+            'guidelines': guidelines  # KILAVUZLARI EKLEDİK
+        }
+        return jsonify(template)
+    
+    except Exception as e:
+        print(f"Template preview error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+    
+    finally:
+        cursor.close()
+        return_pg_connection(conn)
+
+
+@app.route('/api/templates/<int:template_id>/use', methods=['POST'])
+def use_template_api(template_id):
+    """Şablon kullanma API endpoint'i"""
+    if 'customer_id' not in session:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    
+    conn = get_pg_connection()
+    if not conn:
+        return jsonify({'success': False, 'error': 'Database connection error'}), 500
+    
+    cursor = None
+    try:
+        customer_id = session['customer_id']
+        
+        cursor = conn.cursor()
+        
+        # 1. Template kontrolü - template_translations'tan ismi al
+        cursor.execute("""
+            SELECT t.id, tt.template_name 
+            FROM templates t
+            JOIN template_translations tt ON t.id = tt.template_id
+            WHERE t.id = %s AND tt.language_id = 1
+        """, (template_id,))
+        
+        template_data = cursor.fetchone()
+        
+        if not template_data:
+            return jsonify({'success': False, 'error': 'Template bulunamadı'}), 404
+        
+        template_name = template_data[1]
+        
+        # 2. Tabloya kaydet
+        cursor.execute('''
+            INSERT INTO customer_active_template (customer_id, template_id)
+            VALUES (%s, %s)
+            ON CONFLICT (customer_id) 
+            DO UPDATE SET template_id = EXCLUDED.template_id, updated_at = CURRENT_TIMESTAMP
+            RETURNING id
+        ''', (customer_id, template_id))
+        
+        assignment_id = cursor.fetchone()[0]
+        conn.commit()
+        
+        session['active_template_id'] = template_id
+        
+        return jsonify({
+            'success': True, 
+            'message': f'"{template_name}" şablonu başarıyla aktifleştirildi',
+            'template_id': template_id
+        })
+    
+    except Exception as e:
+        print(f"Use template error: {e}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+    
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            return_pg_connection(conn)
+
+def get_customer_active_template(customer_id):
+    """Kullanıcının aktif template'ini getir"""
+    conn = get_pg_connection()
+    if not conn:
+        return None
+    
+    cursor = None
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT t.id, t.template_key, tt.template_name
+            FROM customer_active_template cat
+            JOIN templates t ON cat.template_id = t.id
+            JOIN template_translations tt ON t.id = tt.template_id
+            WHERE cat.customer_id = %s AND tt.language_id = 1
+        ''', (customer_id,))  # customer_id string olarak kullanılacak
+        
+        template = cursor.fetchone()
+        return template
+        
+    except Exception as e:
+        print(f"Get active template error: {e}")
+        return None
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            return_pg_connection(conn)
+
 
 if __name__ == '__main__':
     import jinja2

@@ -1,0 +1,789 @@
+{% extends "customer/base.html" %}
+
+{% block page_title %}Şablon Kütüphanesi{% endblock %}
+{% block page_subtitle %}Hazır şablonlar ile iş süreçlerinizi optimize edin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Search and Filter Section -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <!-- Search Box -->
+            <div class="relative flex-1 min-w-0 lg:max-w-md">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" 
+                       id="searchInput"
+                       placeholder="Şablon ara..." 
+                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            
+            <!-- Filter Buttons -->
+            <div class="flex flex-wrap gap-2">
+                <button class="filter-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" data-filter="all">
+                    Tümü ({{ templates|length }})
+                </button>
+                <button class="filter-btn px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" data-filter="sales">
+                    Satış ({{ templates|selectattr('category', 'equalto', 'sales')|list|length }})
+                </button>
+                <button class="filter-btn px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" data-filter="support">
+                    Destek ({{ templates|selectattr('category', 'equalto', 'support')|list|length }})
+                </button>
+                <button class="filter-btn px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" data-filter="education">
+                    Eğitim ({{ templates|selectattr('category', 'equalto', 'education')|list|length }})
+                </button>
+                <button class="filter-btn px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" data-filter="other">
+                    Diğer ({{ templates|selectattr('category', 'equalto', 'other')|list|length }})
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="templatesGrid">
+        {% for template in templates %}
+        <div class="template-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1" 
+             data-type="{{ template.category }}" 
+             data-id="{{ template.id }}">
+            <div class="h-48 bg-gradient-to-br 
+                {% if template.category == 'sales' %}from-blue-50 to-blue-100
+                {% elif template.category == 'support' %}from-green-50 to-green-100
+                {% elif template.category == 'education' %}from-purple-50 to-purple-100
+                {% else %}from-gray-50 to-gray-100{% endif %} 
+                flex items-center justify-center">
+                <div class="text-center 
+                    {% if template.category == 'sales' %}text-blue-600
+                    {% elif template.category == 'support' %}text-green-600
+                    {% elif template.category == 'education' %}text-purple-600
+                    {% else %}text-gray-600{% endif %}">
+                    <i class="{{ template.icon }} text-4xl mb-3"></i>
+                    <span class="text-sm font-medium block">{{ template.category_name }}</span>
+                </div>
+            </div>
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ template.name }}</h3>
+                <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ template.description }}</p>
+                
+                <!-- Template Details -->
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>Ses Tonu:</span>
+                        <span class="font-medium">{{ template.tone_of_voice }}</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>Yanıt Uzunluğu:</span>
+                        <span class="font-medium">{{ template.response_length }}</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>Dil:</span>
+                        <span class="font-medium">{{ template.response_language }}</span>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center text-xs text-gray-500 mb-4">
+                    <span>{{ template.category_name }}</span>
+                    <span>{{ template.created_at }}</span>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button class="use-template-btn flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            data-template-id="{{ template.id }}">
+                        Kullan
+                    </button>
+                    <button class="preview-template-btn flex-1 bg-white text-gray-700 border border-gray-300 py-2 px-4 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            data-template-id="{{ template.id }}">
+                        Önizle
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- No templates message -->
+        <div class="col-span-full text-center py-12">
+            <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Henüz şablon bulunmuyor</h3>
+            <p class="text-gray-600">Şablonlar yüklenirken bir sorun oluştu.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Template Preview Modal -->
+<div id="templateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-xl max-w-6xl w-full h-[95vh] flex flex-col">
+        <!-- Header - Sabit kalacak -->
+        <div class="p-6 border-b border-gray-200 flex-shrink-0">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-semibold" id="modalTitle">Şablon Detayı</h3>
+                <button id="closeModal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Tab Menü -->
+            <div class="flex space-x-1 mt-4">
+                <button class="tab-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                        data-tab="details">
+                    <i class="fas fa-cog mr-2"></i>Şablon Ayarları
+                </button>
+                <button class="tab-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors hover:bg-gray-300"
+                        data-tab="test">
+                    <i class="fas fa-comments mr-2"></i>Konuşmayı Test Et
+                </button>
+            </div>
+        </div>
+        
+        <!-- Content - Kaydırılabilir kısım -->
+        <div class="flex-1 overflow-y-auto">
+            <!-- Şablon Ayarları Tab İçeriği -->
+            <div id="tab-details" class="tab-content active p-6">
+                <div id="modalContent">
+                    <!-- Mevcut şablon detayları buraya gelecek -->
+                </div>
+            </div>
+            
+            <!-- Test Tab İçeriği -->
+            <div id="tab-test" class="tab-content hidden p-6">
+                <div class="flex justify-center items-start h-full">
+                    <!-- WhatsApp Benzeri Chat Container - Telefon boyutunda -->
+                    <div class="max-w-sm w-full h-full bg-white flex flex-col shadow-lg rounded-lg overflow-hidden border border-gray-200">
+                        <!-- Header -->
+                        <div class="bg-green-500 text-white p-4 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <button class="text-white back-to-details">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-green-300 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-robot"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="font-semibold text-sm" id="chatAssistantName">AI Asistan</h2>
+                                        <p class="text-xs text-green-100">Çevrimiçi</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-3">
+                                <button class="text-white">
+                                    <i class="fas fa-video text-sm"></i>
+                                </button>
+                                <button class="text-white">
+                                    <i class="fas fa-phone text-sm"></i>
+                                </button>
+                                <button class="text-white">
+                                    <i class="fas fa-ellipsis-v text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages - WhatsApp arkaplan deseni -->
+                        <div class="flex-1 overflow-y-auto p-3 bg-cover bg-center bg-repeat bg-opacity-50" 
+                             id="chatMessages"
+                             style="background-image: url('/static/images/background_pattern.png'); background-color: #e5ddd5;">
+                            <!-- Tarih Gösterimi -->
+                            <div class="text-center mb-3">
+                                <span class="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full bg-opacity-80">Bugün</span>
+                            </div>
+
+                            <!-- Gelen Mesajlar (AI) -->
+                            <div class="flex mb-3">
+                                <div class="w-6 h-6 bg-green-300 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                                    <i class="fas fa-robot text-white text-xs"></i>
+                                </div>
+                                <div class="bg-white rounded-2xl rounded-tl-none px-3 py-2 max-w-[85%] shadow-sm">
+                                    <p class="text-gray-800 text-sm">Merhaba! Size nasıl yardımcı olabilirim? Hangi konuda destek almak istiyorsunuz?</p>
+                                    <span class="text-xs text-gray-500 block text-right mt-1">10:30</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Message Input -->
+                        <div class="bg-gray-100 p-3 border-t border-gray-200">
+                            <div class="flex items-center space-x-2">
+                                <button class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-600">
+                                    <i class="fas fa-plus text-sm"></i>
+                                </button>
+                                <div class="flex-1 bg-white rounded-full border border-gray-300">
+                                    <input 
+                                        type="text" 
+                                        id="chatInput"
+                                        placeholder="Mesaj yazın..."
+                                        class="w-full px-3 py-2 bg-transparent outline-none rounded-full text-sm"
+                                    >
+                                </div>
+                                <button id="sendMessage" class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white">
+                                    <i class="fas fa-paper-plane text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Hızlı Erişim</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="{{ url_for('ai_templates') }}" class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-plus-circle text-blue-600 text-xl"></i>
+                    <div>
+                        <span class="font-medium block">Yeni Şablon</span>
+                        <span class="text-sm text-gray-500">Oluştur</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </a>
+            
+            <a href="{{ url_for('ai_templates') }}" class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-upload text-green-600 text-xl"></i>
+                    <div>
+                        <span class="font-medium block">Şablon İçe Aktar</span>
+                        <span class="text-sm text-gray-500">Dosya yükle</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </a>
+            
+            <a href="{{ url_for('ai_templates') }}" class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-folder-open text-purple-600 text-xl"></i>
+                    <div>
+                        <span class="font-medium block">Kategoriler</span>
+                        <span class="text-sm text-gray-500">Yönet</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </a>
+            
+            <a href="{{ url_for('ai_templates') }}" class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-cog text-orange-600 text-xl"></i>
+                    <div>
+                        <span class="font-medium block">Ayarlar</span>
+                        <span class="text-sm text-gray-500">Düzenle</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Tab Stilleri */
+    .tab-btn.active {
+        background-color: #2563eb;
+        color: white;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* Chat Scrollbar */
+    #chatMessages::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    #chatMessages::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    #chatMessages::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 2px;
+    }
+    
+    #chatMessages::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter buttons functionality
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const templateCards = document.querySelectorAll('.template-card');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.getAttribute('data-filter');
+            
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+            });
+            
+            // Add active class to clicked button
+            this.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+            this.classList.add('bg-blue-600', 'text-white');
+            
+            // Filter templates
+            templateCards.forEach(card => {
+                if (filter === 'all' || card.getAttribute('data-type') === filter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Template actions
+    const useButtons = document.querySelectorAll('.use-template-btn');
+    const previewButtons = document.querySelectorAll('.preview-template-btn');
+    const modal = document.getElementById('templateModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalContent = document.getElementById('modalContent');
+    const closeModal = document.getElementById('closeModal');
+
+    // Use template
+    useButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const templateId = this.getAttribute('data-template-id');
+            const templateName = this.closest('.p-6').querySelector('h3').textContent;
+            
+            if (confirm(`"${templateName}" şablonunu kullanmak istediğinizden emin misiniz?`)) {
+                fetch(`/api/templates/${templateId}/use`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Şablon başarıyla kullanıldı!');
+                    } else {
+                        alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Şablon kullanılırken bir hata oluştu.');
+                });
+            }
+        });
+    });
+
+    // Tab fonksiyonelliği
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
+            // Tüm tab butonlarını ve içeriklerini deaktif et
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                content.classList.add('hidden');
+            });
+            
+            // Aktif tab'ı seç
+            this.classList.remove('bg-gray-200', 'text-gray-700');
+            this.classList.add('active', 'bg-blue-600', 'text-white');
+            
+            document.getElementById(`tab-${targetTab}`).classList.add('active');
+            document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
+        });
+    });
+
+    // Chat fonksiyonelliği
+    const chatInput = document.getElementById('chatInput');
+    const sendButton = document.getElementById('sendMessage');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatAssistantName = document.getElementById('chatAssistantName');
+    const backToDetails = document.querySelector('.back-to-details');
+    
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (message) {
+            // Kullanıcı mesajını ekle
+            addUserMessage(message);
+            chatInput.value = '';
+            
+            // AI yanıtını simüle et (2 saniye sonra)
+            setTimeout(() => {
+                addAIMessage("Bu bir test yanıtıdır. Gerçek AI entegrasyonu yapıldığında burada şablonunuzun yanıtları görünecek.");
+            }, 2000);
+        }
+    }
+    
+    function addUserMessage(text) {
+        const messageHtml = `
+            <div class="flex justify-end mb-4">
+                <div class="bg-green-100 rounded-2xl rounded-tr-none px-4 py-2 max-w-[80%] shadow-sm">
+                    <p class="text-gray-800">${text}</p>
+                    <span class="text-xs text-gray-500 block text-right mt-1">${getCurrentTime()} ✓✓</span>
+                </div>
+            </div>
+        `;
+        chatMessages.insertAdjacentHTML('beforeend', messageHtml);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function addAIMessage(text) {
+        const messageHtml = `
+            <div class="flex mb-4">
+                <div class="w-8 h-8 bg-green-300 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                    <i class="fas fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-white rounded-2xl rounded-tl-none px-4 py-2 max-w-[80%] shadow-sm">
+                    <p class="text-gray-800">${text}</p>
+                    <span class="text-xs text-gray-500 block text-right mt-1">${getCurrentTime()}</span>
+                </div>
+            </div>
+        `;
+        chatMessages.insertAdjacentHTML('beforeend', messageHtml);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function getCurrentTime() {
+        return new Date().toLocaleTimeString('tr-TR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+    }
+    
+    // Event listeners
+    sendButton.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+    
+    // Back to details butonu
+    backToDetails.addEventListener('click', function() {
+        tabButtons.forEach(btn => {
+            btn.classList.remove('active', 'bg-blue-600', 'text-white');
+            btn.classList.add('bg-gray-200', 'text-gray-700');
+        });
+        
+        tabContents.forEach(content => {
+            content.classList.remove('active');
+            content.classList.add('hidden');
+        });
+        
+        document.querySelector('.tab-btn[data-tab="details"]').classList.add('active', 'bg-blue-600', 'text-white');
+        document.getElementById('tab-details').classList.add('active');
+        document.getElementById('tab-details').classList.remove('hidden');
+    });
+
+    // Preview template
+    previewButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const templateId = this.getAttribute('data-template-id');
+            
+            fetch(`/api/templates/${templateId}/preview`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(template => {
+                    modalTitle.textContent = template.name;
+                    chatAssistantName.textContent = template.name + " Asistanı";
+                    
+                    // Kılavuzları oluştur - Silme butonlu
+                    let guidelinesHtml = '';
+                    if (template.guidelines && template.guidelines.length > 0) {
+                        guidelinesHtml = `
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-semibold text-gray-900">Kılavuzlar:</h4>
+                                </div>
+                                <div class="space-y-3">
+                                    ${template.guidelines.map(guideline => `
+                                        <div class="border-l-4 border-green-500 pl-4 py-2 bg-green-50 rounded-r flex justify-between items-start group relative">
+                                            <p class="text-gray-600 flex-1">${guideline.instruction}</p>
+                                            <button class="delete-guideline-btn ml-3 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div class="mt-3">
+                                    <button class="add-guideline-btn bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Kılavuz Ekle
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        guidelinesHtml = `
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-semibold text-gray-900">Kılavuzlar:</h4>
+                                </div>
+                                <div class="border-l-4 border-green-500 pl-4 py-2 bg-green-50 rounded-r">
+                                    <p class="text-gray-600 text-sm italic">Bu şablon için kılavuz bulunmamaktadır.</p>
+                                </div>
+                                <div class="mt-3">
+                                    <button class="add-guideline-btn bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Kılavuz Ekle
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Aksiyonları oluştur - Silme butonlu
+                    let actionsHtml = '';
+                    if (template.actions && template.actions.length > 0) {
+                        actionsHtml = `
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-semibold text-gray-900">Aksiyonlar:</h4>
+                                </div>
+                                <div class="space-y-3">
+                                    ${template.actions.map(action => `
+                                        <div class="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 rounded-r flex justify-between items-start group relative">
+                                            <div class="flex-1">
+                                                <p class="font-medium text-gray-900">${action.trigger_condition || 'Tetikleyici'}</p>
+                                                <p class="text-sm text-gray-600 mt-1">${action.action_text || 'Aksiyon metni'}</p>
+                                            </div>
+                                            <button class="delete-action-btn ml-3 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div class="mt-3">
+                                    <button class="add-action-btn bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Aksiyon Ekle
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        actionsHtml = `
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-semibold text-gray-900">Aksiyonlar:</h4>
+                                </div>
+                                <div class="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 rounded-r">
+                                    <p class="text-gray-600 text-sm italic">Bu şablon için aksiyon bulunmamaktadır.</p>
+                                </div>
+                                <div class="mt-3">
+                                    <button class="add-action-btn bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Aksiyon Ekle
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    modalContent.innerHTML = `
+                        <div class="space-y-6">
+                            <!-- Açıklama ve Ses Tonu - Yanyana -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2">Açıklama:</h4>
+                                    <p class="text-gray-600">${template.description}</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2">Ses Tonu:</h4>
+                                    <p class="text-gray-600">${template.tone_of_voice}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Rol ve Kişilik - Tek başına full width -->
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2">Rol ve Kişilik:</h4>
+                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                    <p class="text-gray-600">${template.role_and_personality}</p>
+                                </div>
+                            </div>
+                            
+                            ${guidelinesHtml}
+                            
+                            <!-- Yanıt Uzunluğu ve Yanıt Dili - Yanyana -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2">Yanıt Uzunluğu:</h4>
+                                    <p class="text-gray-600">${template.response_length}</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-2">Yanıt Dili:</h4>
+                                    <p class="text-gray-600">${template.response_language}</p>
+                                </div>
+                            </div>
+                            
+                            ${actionsHtml}
+                            
+                            <!-- Butonlar -->
+                            <div class="flex gap-2 pt-4 border-t border-gray-200">
+                                <button class="use-template-modal-btn bg-blue-600 text-white py-3 px-6 rounded-lg text-sm font-medium transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                        data-template-id="${template.id}">
+                                    <i class="fas fa-play-circle mr-2"></i>
+                                    Bu Şablonu Kullan
+                                </button>
+                                <button class="close-modal-btn bg-white text-gray-700 border border-gray-300 py-3 px-6 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                    <i class="fas fa-times mr-2"></i>
+                                    Kapat
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    modal.classList.remove('hidden');
+                    
+                    // Silme butonları için event listener'lar
+                    document.querySelectorAll('.delete-guideline-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            if (confirm('Bu kılavuzu silmek istediğinizden emin misiniz?')) {
+                                this.closest('.border-l-4').remove();
+                            }
+                        });
+                    });
+                    
+                    document.querySelectorAll('.delete-action-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            if (confirm('Bu aksiyonu silmek istediğinizden emin misiniz?')) {
+                                this.closest('.border-l-4').remove();
+                            }
+                        });
+                    });
+                    
+                    // Ekle butonları için event listener'lar
+                    document.querySelector('.add-guideline-btn')?.addEventListener('click', function() {
+                        const newGuideline = prompt('Yeni kılavuz ekleyin:');
+                        if (newGuideline) {
+                            const guidelinesContainer = this.previousElementSibling;
+                            const newGuidelineHtml = `
+                                <div class="border-l-4 border-green-500 pl-4 py-2 bg-green-50 rounded-r flex justify-between items-start group relative">
+                                    <p class="text-gray-600 flex-1">${newGuideline}</p>
+                                    <button class="delete-guideline-btn ml-3 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            `;
+                            guidelinesContainer.insertAdjacentHTML('beforeend', newGuidelineHtml);
+                            
+                            // Yeni silme butonu için event listener ekle
+                            guidelinesContainer.lastElementChild.querySelector('.delete-guideline-btn').addEventListener('click', function() {
+                                if (confirm('Bu kılavuzu silmek istediğinizden emin misiniz?')) {
+                                    this.closest('.border-l-4').remove();
+                                }
+                            });
+                        }
+                    });
+                    
+                    document.querySelector('.add-action-btn')?.addEventListener('click', function() {
+                        const trigger = prompt('Tetikleyici koşulu:');
+                        const action = prompt('Aksiyon metni:');
+                        if (trigger && action) {
+                            const actionsContainer = this.previousElementSibling;
+                            const newActionHtml = `
+                                <div class="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 rounded-r flex justify-between items-start group relative">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900">${trigger}</p>
+                                        <p class="text-sm text-gray-600 mt-1">${action}</p>
+                                    </div>
+                                    <button class="delete-action-btn ml-3 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            `;
+                            actionsContainer.insertAdjacentHTML('beforeend', newActionHtml);
+                            
+                            // Yeni silme butonu için event listener ekle
+                            actionsContainer.lastElementChild.querySelector('.delete-action-btn').addEventListener('click', function() {
+                                if (confirm('Bu aksiyonu silmek istediğinizden emin misiniz?')) {
+                                    this.closest('.border-l-4').remove();
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Modal içindeki butonlar için event listener'lar
+                    document.querySelector('.use-template-modal-btn').addEventListener('click', function() {
+                        fetch(`/api/templates/${templateId}/use`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            credentials: 'same-origin'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Şablon başarıyla kullanıldı!');
+                                modal.classList.add('hidden');
+                            } else {
+                                alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Şablon kullanılırken bir hata oluştu.');
+                        });
+                    });
+
+                    // Modal içindeki kapat butonu
+                    document.querySelector('.close-modal-btn').addEventListener('click', function() {
+                        modal.classList.add('hidden');
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Şablon detayları yüklenirken bir hata oluştu.');
+                });
+        });
+    });
+
+    // Close modal
+    closeModal.addEventListener('click', function() {
+        modal.classList.add('hidden');
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        templateCards.forEach(card => {
+            const title = card.querySelector('h3').textContent.toLowerCase();
+            const description = card.querySelector('p').textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+
+    // Click outside modal to close
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+});
+</script>
+{% endblock %}
